@@ -213,12 +213,32 @@ class AppController: ObservableObject {
               let fromIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }),
               let toIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == target.id }) else { return }
 
-        let routeToMove = vpnConfigs[vpnIndex].routes.remove(at: fromIndex)
+        // Create a mutable copy to ensure @Published triggers
+        var config = vpnConfigs[vpnIndex]
+        let routeToMove = config.routes.remove(at: fromIndex)
 
-        // 调整目标索引（如果从前面移到后面，索引会变化）
+        // Adjust target index (if moving from earlier to later position)
         let adjustedToIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
 
-        vpnConfigs[vpnIndex].routes.insert(routeToMove, at: adjustedToIndex)
+        config.routes.insert(routeToMove, at: adjustedToIndex)
+        vpnConfigs[vpnIndex] = config  // Reassign to trigger @Published
+        saveConfig()
+    }
+
+    func moveRouteToIndex(_ route: RouteItem, toIndex: Int, in vpnName: String) {
+        guard let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }),
+              let fromIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }) else { return }
+
+        guard fromIndex != toIndex else { return }
+
+        var config = vpnConfigs[vpnIndex]
+        let routeToMove = config.routes.remove(at: fromIndex)
+
+        // Adjust insert index
+        let insertIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
+        config.routes.insert(routeToMove, at: insertIndex)
+
+        vpnConfigs[vpnIndex] = config
         saveConfig()
     }
 

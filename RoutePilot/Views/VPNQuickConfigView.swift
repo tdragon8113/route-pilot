@@ -14,6 +14,12 @@ struct VPNQuickConfigView: View {
     @ObservedObject private var app = AppController.shared
     @State private var newNote: String = ""
 
+    // 拖拽状态
+    @State private var draggingId: UUID? = nil
+    @State private var dragProgress: CGFloat = 0
+
+    private let rowHeight: CGFloat = 32
+
     var config: VPNConfig? {
         app.vpnConfigs.first { $0.name == vpnName }
     }
@@ -24,6 +30,38 @@ struct VPNQuickConfigView: View {
 
     var isActiveVPN: Bool {
         vpnStatus != nil
+    }
+
+    // 计算每个元素的偏移
+    private func offsetForIndex(_ index: Int, routes: [RouteItem]) -> CGFloat {
+        guard let draggingId = draggingId,
+              let dragStartIndex = routes.firstIndex(where: { $0.id == draggingId }) else {
+            return 0
+        }
+
+        let isBeingDragged = routes[index].id == draggingId
+        if isBeingDragged {
+            // 被拖拽元素跟随手指
+            return dragProgress * rowHeight
+        }
+
+        // 其他元素让位逻辑
+        let targetOffset = Int(round(dragProgress))
+        let targetIndex = dragStartIndex + targetOffset
+
+        if dragProgress > 0 { // 向下拖
+            // 在起点和目标之间的元素向上让
+            if index > dragStartIndex && index <= targetIndex {
+                return -rowHeight
+            }
+        } else if dragProgress < 0 { // 向上拖
+            // 在目标和起点之间的元素向下让
+            if index >= targetIndex && index < dragStartIndex {
+                return rowHeight
+            }
+        }
+
+        return 0
     }
 
     var body: some View {
@@ -75,10 +113,29 @@ struct VPNQuickConfigView: View {
             }
 
             if let routes = config?.routes, !routes.isEmpty {
-                ForEach(routes) { route in
+                ForEach(Array(routes.enumerated()), id: \.element.id) { index, route in
                     RouteRowView(
                         route: route,
-                        vpnName: vpnName
+                        vpnName: vpnName,
+                        isBeingDragged: draggingId == route.id,
+                        offsetY: offsetForIndex(index, routes: routes),
+                        onDragChanged: { id, progress in
+                            draggingId = id
+                            dragProgress = progress
+                        },
+                        onDragEnded: {
+                            // 执行实际的移动
+                            if let startIdx = routes.firstIndex(where: { $0.id == draggingId }) {
+                                let targetOffset = Int(round(dragProgress))
+                                let targetIdx = startIdx + targetOffset
+                                let clampedTarget = max(0, min(routes.count - 1, targetIdx))
+                                if clampedTarget != startIdx {
+                                    app.moveRouteToIndex(routes[startIdx], toIndex: clampedTarget, in: vpnName)
+                                }
+                            }
+                            draggingId = nil
+                            dragProgress = 0
+                        }
                     )
                 }
                 .onDelete { offsets in
@@ -141,29 +198,35 @@ struct VPNQuickConfigView: View {
     }
 }
 
-/// 路由行视图
+/// 路由行视图 - 支持拖拽排序
 struct RouteRowView: View {
     let route: RouteItem
     let vpnName: String
+    let isBeingDragged: Bool
+    let offsetY: CGFloat
+    let onDragChanged: (UUID, CGFloat) -> Void
+    let onDragEnded: () -> Void
+
     @ObservedObject private var app = AppController.shared
     @State private var isEditing: Bool = false
     @State private var editingNote: String = ""
-    @State private var isDragging: Bool = false
-    @State private var isTargeted: Bool = false
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             // 拖拽手柄
             Image(systemName: "line.3.horizontal")
                 .font(.caption2)
-                .foregroundColor(isDragging ? .accentColor : .secondary)
+                .foregroundColor(isBeingDragged ? .accentColor : .secondary)
                 .contentShape(Rectangle())
                 .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in
-                            if !isDragging {
-                                isDragging = true
-                            }
+                    DragGesture(minimumDistance: 5, coordinateSpace: .global)
+                        .onChanged { value in
+                            let rowHeight: CGFloat = 32
+                            let progress = value.translation.height / rowHeight
+                            onDragChanged(route.id, progress)
+                        }
+                        .onEnded { _ in
+                            onDragEnded()
                         }
                 )
 
@@ -227,24 +290,20 @@ struct RouteRowView: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 2)
-        .padding(.horizontal, 4)
-        .background(isTargeted ? Color.accentColor.opacity(0.15) : Color.clear)
-        .cornerRadius(4)
-        .overlay {
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(isTargeted ? Color.accentColor : Color.clear, lineWidth: 2)
-        }
-        .draggable(route.id.uuidString)
-        .dropDestination(for: String.self) { items, location in
-            guard let droppedId = items.first,
-                  let droppedRoute = app.vpnConfigs.first(where: { $0.name == vpnName })?.routes.first(where: { $0.id.uuidString == droppedId }) else {
-                return false
-            }
-            app.moveRoute(droppedRoute, toPositionOf: route, in: vpnName)
-            return true
-        } isTargeted: { targeted in
-            isTargeted = targeted
-        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(isBeingDragged ? Color.accentColor : Color.clear, lineWidth: 2)
+        )
+        .shadow(color: isBeingDragged ? Color.black.opacity(0.3) : Color.clear, radius: isBeingDragged ? 4 : 0)
+        .scaleEffect(isBeingDragged ? 1.02 : 1)
+        .offset(y: offsetY)
+        .animation(.easeOut(duration: isBeingDragged ? 0 : 0.15), value: offsetY)
+        .zIndex(isBeingDragged ? 10 : 0)
     }
 }
