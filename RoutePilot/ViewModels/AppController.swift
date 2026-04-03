@@ -188,6 +188,30 @@ class AppController: ObservableObject {
         }
     }
 
+    func moveRoute(_ route: RouteItem, in vpnName: String, direction: MoveDirection) {
+        guard let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }),
+              let routeIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }) else { return }
+
+        let routes = vpnConfigs[vpnIndex].routes
+        let newIndex: Int
+
+        switch direction {
+        case .up:
+            guard routeIndex > 0 else { return }
+            newIndex = routeIndex - 1
+        case .down:
+            guard routeIndex < routes.count - 1 else { return }
+            newIndex = routeIndex + 1
+        }
+
+        vpnConfigs[vpnIndex].routes.swapAt(routeIndex, newIndex)
+        saveConfig()
+    }
+
+    enum MoveDirection {
+        case up, down
+    }
+
     // MARK: - 路由操作
     private func autoAddRoutes(for vpnName: String) {
         guard let config = vpnConfigs.first(where: { $0.name == vpnName }) else {

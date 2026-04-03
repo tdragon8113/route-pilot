@@ -75,10 +75,12 @@ struct VPNQuickConfigView: View {
             }
 
             if let routes = config?.routes, !routes.isEmpty {
-                ForEach(routes) { route in
+                ForEach(Array(routes.enumerated()), id: \.element.id) { index, route in
                     RouteRowView(
                         route: route,
-                        vpnName: vpnName
+                        vpnName: vpnName,
+                        canMoveUp: index > 0,
+                        canMoveDown: index < routes.count - 1
                     )
                 }
             }
@@ -138,12 +140,19 @@ struct VPNQuickConfigView: View {
 struct RouteRowView: View {
     let route: RouteItem
     let vpnName: String
+    let canMoveUp: Bool
+    let canMoveDown: Bool
     @ObservedObject private var app = AppController.shared
     @State private var isEditing: Bool = false
     @State private var editingNote: String = ""
 
     var body: some View {
         HStack {
+            // 拖拽手柄
+            Image(systemName: "line.3.horizontal")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
             Toggle("", isOn: Binding(
                 get: { route.enabled },
                 set: { app.toggleRoute(route, in: vpnName, enabled: $0) }
@@ -161,6 +170,25 @@ struct RouteRowView: View {
             }
 
             Spacer()
+
+            // 上下移动按钮
+            HStack(spacing: 2) {
+                Button(action: { app.moveRoute(route, in: vpnName, direction: .up) }) {
+                    Image(systemName: "chevron.up")
+                        .font(.caption2)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!canMoveUp)
+                .opacity(canMoveUp ? 1 : 0.3)
+
+                Button(action: { app.moveRoute(route, in: vpnName, direction: .down) }) {
+                    Image(systemName: "chevron.down")
+                        .font(.caption2)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!canMoveDown)
+                .opacity(canMoveDown ? 1 : 0.3)
+            }
 
             Button(action: {
                 editingNote = route.note ?? ""
