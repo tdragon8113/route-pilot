@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Network
 import SystemConfiguration
 
 /// VPN 检测服务
@@ -12,7 +11,6 @@ actor VPNService {
 
     static let shared = VPNService()
 
-    private var pathMonitor: NWPathMonitor?
     private var store: SCDynamicStore?
     private var runLoopSource: CFRunLoopSource?
     private var monitoringCallback: (@MainActor (String?) -> Void)?
@@ -224,7 +222,7 @@ actor VPNService {
                 if isVPNInterface(interface) {
                     // 检查接口是否有 IPv4 配置（表示已连接）
                     let ipv4Key = "State:/Network/Interface/\(interface)/IPv4" as CFString
-                    if let ipv4Config = SCDynamicStoreCopyValue(store, ipv4Key) as? [String: Any] {
+                    if SCDynamicStoreCopyValue(store, ipv4Key) != nil {
                         // 获取 VPN 名称
                         if let vpnName = getVPNNameForInterface(interface) {
                             result.append(VPNStatus(name: vpnName, connected: true, interface: interface))
