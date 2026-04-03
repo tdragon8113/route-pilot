@@ -92,6 +92,40 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          # 获取版本号（如 v1.1.0）
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "Extracting changelog for $VERSION"
+
+          # 提取该版本的变更日志（从版本标题到下一个版本标题之间的内容）
+          # 使用 awk 来提取特定版本的段落
+          CHANGELOG=$(awk -v ver="$VERSION" '
+            /^## \[/{ found=0 }
+            /^## \['"$VERSION"'\]/ { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md | sed '/^$/d')
+
+          # 如果找不到该版本的 changelog，使用自动生成
+          if [ -z "$CHANGELOG" ]; then
+            echo "No changelog entry found for $VERSION, will use auto-generated notes"
+            echo "use_auto=true" >> $GITHUB_OUTPUT
+          else
+            echo "Found changelog for $VERSION"
+            echo "use_auto=false" >> $GITHUB_OUTPUT
+            # 多行内容需要特殊处理
+            {
+              echo 'body<<EOF'
+              echo "$CHANGELOG"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          fi
+
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
@@ -101,6 +135,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: RoutePilot.dmg
-          generate_release_notes: true
+          body: ${{ steps.changelog.outputs.body }}
+          generate_release_notes: ${{ steps.changelog.outputs.use_auto == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
