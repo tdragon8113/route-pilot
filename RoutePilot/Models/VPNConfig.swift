@@ -11,7 +11,6 @@ struct VPNConfig: Identifiable, Codable {
     var name: String
     var enabled: Bool = true
     var routes: [RouteItem] = []
-    var customInterface: String? = nil
 
     init(name: String) {
         self.name = name

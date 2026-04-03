@@ -13,6 +13,7 @@
 		8A6716D52F7F9F30007F94C1 /* settings.local.json in Resources */ = {isa = PBXBuildFile; fileRef = 8A6716D32F7F9F30007F94C1 /* settings.local.json */; };
 		8A6716DA2F7F9F3F007F94C1 /* ci.yml in Resources */ = {isa = PBXBuildFile; fileRef = 8A6716D62F7F9F3F007F94C1 /* ci.yml */; };
 		8A6716DB2F7F9F3F007F94C1 /* release.yml in Resources */ = {isa = PBXBuildFile; fileRef = 8A6716D72F7F9F3F007F94C1 /* release.yml */; };
+		8A6716E02F7FBA1D007F94C1 /* 2026-04-03-vpn-monitoring-refactor-design.md in Resources */ = {isa = PBXBuildFile; fileRef = 8A6716DC2F7FBA1D007F94C1 /* 2026-04-03-vpn-monitoring-refactor-design.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 		8A6716D32F7F9F30007F94C1 /* settings.local.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = settings.local.json; sourceTree = "<group>"; };
 		8A6716D62F7F9F3F007F94C1 /* ci.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = ci.yml; sourceTree = "<group>"; };
 		8A6716D72F7F9F3F007F94C1 /* release.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = release.yml; sourceTree = "<group>"; };
+		8A6716DC2F7FBA1D007F94C1 /* 2026-04-03-vpn-monitoring-refactor-design.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "2026-04-03-vpn-monitoring-refactor-design.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -47,6 +49,7 @@
 		8A10E7D32F7D20A8008E16CF = {
 			isa = PBXGroup;
 			children = (
+				8A6716DF2F7FBA1D007F94C1 /* docs */,
 				8A6716D92F7F9F3F007F94C1 /* .github */,
 				8A6716D42F7F9F30007F94C1 /* .claude */,
 				8A6716D12F7F9B3C007F94C1 /* README.md */,
@@ -88,6 +91,30 @@
 				8A6716D82F7F9F3F007F94C1 /* workflows */,
 			);
 			path = .github;
+			sourceTree = "<group>";
+		};
+		8A6716DD2F7FBA1D007F94C1 /* specs */ = {
+			isa = PBXGroup;
+			children = (
+				8A6716DC2F7FBA1D007F94C1 /* 2026-04-03-vpn-monitoring-refactor-design.md */,
+			);
+			path = specs;
+			sourceTree = "<group>";
+		};
+		8A6716DE2F7FBA1D007F94C1 /* superpowers */ = {
+			isa = PBXGroup;
+			children = (
+				8A6716DD2F7FBA1D007F94C1 /* specs */,
+			);
+			path = superpowers;
+			sourceTree = "<group>";
+		};
+		8A6716DF2F7FBA1D007F94C1 /* docs */ = {
+			isa = PBXGroup;
+			children = (
+				8A6716DE2F7FBA1D007F94C1 /* superpowers */,
+			);
+			path = docs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,6 +186,7 @@
 				8A6716D22F7F9B3C007F94C1 /* README.md in Resources */,
 				8A6716742F7F6B21007F94C1 /* CLAUDE.md in Resources */,
 				8A6716DA2F7F9F3F007F94C1 /* ci.yml in Resources */,
+				8A6716E02F7FBA1D007F94C1 /* 2026-04-03-vpn-monitoring-refactor-design.md in Resources */,
 				8A6716DB2F7F9F3F007F94C1 /* release.yml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

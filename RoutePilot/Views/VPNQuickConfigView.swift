@@ -5,15 +5,13 @@
 
 import SwiftUI
 
-/// VPN 快速配置组件：接口设置、路由管理、操作按钮
+/// VPN 快速配置组件：路由管理、操作按钮
 struct VPNQuickConfigView: View {
     let vpnName: String
     @Binding var newRoute: String
     @Binding var showDetailView: Bool
     @Binding var detailInitialTab: Int
     @ObservedObject private var app = AppController.shared
-    @State private var showInterfaceEditor: Bool = false
-    @State private var editingInterface: String = ""
 
     var config: VPNConfig? {
         app.vpnConfigs.first { $0.name == vpnName }
@@ -25,10 +23,6 @@ struct VPNQuickConfigView: View {
 
     var isActiveVPN: Bool {
         vpnStatus != nil
-    }
-
-    var currentInterface: String {
-        vpnStatus?.interface ?? config?.customInterface ?? "自动检测"
     }
 
     var body: some View {
@@ -45,6 +39,11 @@ struct VPNQuickConfigView: View {
                     Text("已连接")
                         .font(.caption)
                         .foregroundColor(.green)
+                    if let iface = vpnStatus?.interface {
+                        Text("(\(iface))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -72,55 +71,6 @@ struct VPNQuickConfigView: View {
                 ))
                 .labelsHidden()
                 .controlSize(.small)
-            }
-
-            HStack {
-                Text("接口:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                if showInterfaceEditor {
-                    TextField("如 ppp0 或 utun4", text: $editingInterface)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.caption)
-                        .frame(width: 100)
-
-                    Button("保存") {
-                        app.setCustomInterface(editingInterface, for: vpnName)
-                        showInterfaceEditor = false
-                    }
-                    .font(.caption)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-
-                    Button("取消") {
-                        showInterfaceEditor = false
-                    }
-                    .font(.caption)
-                    .buttonStyle(.borderless)
-                } else {
-                    Text(currentInterface)
-                        .font(.caption)
-                        .foregroundColor(config?.customInterface != nil ? .blue : .secondary)
-
-                    Button(action: {
-                        editingInterface = config?.customInterface ?? ""
-                        showInterfaceEditor = true
-                    }) {
-                        Image(systemName: "pencil")
-                            .font(.caption2)
-                    }
-                    .buttonStyle(.borderless)
-
-                    if config?.customInterface != nil {
-                        Button("重置") {
-                            app.setCustomInterface("", for: vpnName)
-                        }
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                        .buttonStyle(.borderless)
-                    }
-                }
             }
 
             if let routes = config?.routes, !routes.isEmpty {

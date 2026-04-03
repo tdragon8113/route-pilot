@@ -152,15 +152,6 @@ class AppController: ObservableObject {
     }
 
     // MARK: - 路由配置
-    func setCustomInterface(_ interface: String, for vpnName: String) {
-        if let index = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-            vpnConfigs[index].customInterface = interface.isEmpty ? nil : interface
-            saveConfig()
-            log("已设置 \(vpnName) 的接口为: \(interface.isEmpty ? "自动检测" : interface)", level: .success, vpnName: vpnName)
-            checkVPNStatus()
-        }
-    }
-
     func addRoute(_ destination: String, to vpnName: String) {
         log("添加路由规则: \(destination) -> \(vpnName)", vpnName: vpnName)
         if let index = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {

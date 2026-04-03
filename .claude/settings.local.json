@@ -9,7 +9,15 @@
       "Bash(codesign -d --entitlements - ~/Library/Developer/Xcode/DerivedData/AutoRoute-gbfrctynvouowlhaothpyqosmeqf/Build/Products/Debug/AutoRoute.app)",
       "mcp__idea__build_project",
       "Bash(pkill -f AutoRoute.app)",
-      "Bash(open ~/Library/Developer/Xcode/DerivedData/AutoRoute-*/Build/Products/Debug/AutoRoute.app)"
+      "Bash(open ~/Library/Developer/Xcode/DerivedData/AutoRoute-*/Build/Products/Debug/AutoRoute.app)",
+      "Bash(xcodebuild:*)",
+      "mcp__plugin_everything-claude-code_context7__resolve-library-id",
+      "mcp__plugin_everything-claude-code_exa__get_code_context_exa",
+      "mcp__plugin_everything-claude-code_exa__crawling_exa",
+      "mcp__plugin_everything-claude-code_github__search_code",
+      "mcp__plugin_everything-claude-code_exa__web_search_exa",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
