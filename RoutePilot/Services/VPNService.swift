@@ -204,6 +204,40 @@ actor VPNService {
         }
     }
 
+    /// 从 SCDynamicStore 获取 VPN 状态
+    func getVPNStatusFromStore() -> [VPNStatus] {
+        var result: [VPNStatus] = []
+
+        guard let store = store ?? SCDynamicStoreCreate(nil, "RoutePilot" as CFString, nil, nil) else {
+            return result
+        }
+
+        // 获取所有接口
+        let key = "State:/Network/Interface" as CFString
+        guard let interfaces = SCDynamicStoreCopyValue(store, key) as? [String: Any] else {
+            return result
+        }
+
+        // 遍历接口
+        if let interfaceList = interfaces["Interfaces"] as? [String] {
+            for interface in interfaceList {
+                if isVPNInterface(interface) {
+                    // 检查接口是否有 IPv4 配置（表示已连接）
+                    let ipv4Key = "State:/Network/Interface/\(interface)/IPv4" as CFString
+                    if let ipv4Config = SCDynamicStoreCopyValue(store, ipv4Key) as? [String: Any] {
+                        // 获取 VPN 名称
+                        if let vpnName = getVPNNameForInterface(interface) {
+                            result.append(VPNStatus(name: vpnName, connected: true, interface: interface))
+                            NSLog("[VPNService] 从 Store 获取 VPN: \(vpnName), 接口: \(interface)")
+                        }
+                    }
+                }
+            }
+        }
+
+        return result
+    }
+
     /// 判断是否为 VPN 接口
     private func isVPNInterface(_ interface: String) -> Bool {
         interface.hasPrefix("ppp") ||
@@ -211,9 +245,34 @@ actor VPNService {
         interface.hasPrefix("ipsec")
     }
 
-    /// 获取接口对应的 VPN 名称（Task 2 将实现）
+    /// 获取接口对应的 VPN 名称
     private func getVPNNameForInterface(_ interface: String) -> String? {
-        // Will be implemented in Task 2
+        // 使用 scutil 获取接口对应的 VPN 名称
+        // 先尝试从 scutil --nc list 获取已连接的 VPN
+        let output = ShellRunner.runWithOutputSync("/usr/sbin/scutil --nc list")
+
+        for line in output.split(separator: "\n") {
+            let lineStr = String(line)
+            guard lineStr.contains("(Connected)") else { continue }
+
+            // 提取 VPN 名称
+            let namePattern = "\"([^\"]+)\""
+            guard let nameRegex = try? NSRegularExpression(pattern: namePattern) else { continue }
+            let range = NSRange(lineStr.startIndex..., in: lineStr)
+            let matches = nameRegex.matches(in: lineStr, range: range)
+
+            guard let nameMatch = matches.first,
+                  let vpnNameRange = Range(nameMatch.range(at: 1), in: lineStr) else { continue }
+
+            let vpnName = String(lineStr[vpnNameRange])
+
+            // 检查该 VPN 的接口是否匹配
+            let statusOutput = ShellRunner.runWithOutputSync("/usr/sbin/scutil --nc status \"\(vpnName)\"")
+            if statusOutput.contains("InterfaceName : \(interface)") {
+                return vpnName
+            }
+        }
+
         return nil
     }
 

@@ -47,6 +47,27 @@ actor ShellRunner {
         }
     }
 
+    /// 执行 Shell 命令，返回输出（同步版本，用于 SCDynamicStore 回调）
+    /// 注意：这是 static 方法，用于在 actor 上下文之外调用
+    static func runWithOutputSync(_ command: String) -> String {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/bash")
+        task.arguments = ["-c", command]
+
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = pipe
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            return String(data: data, encoding: .utf8) ?? ""
+        } catch {
+            return "ERROR: \(error.localizedDescription)"
+        }
+    }
+
     /// 执行 AppleScript
     func runAppleScript(_ script: String) async -> Bool {
         let task = Process()
