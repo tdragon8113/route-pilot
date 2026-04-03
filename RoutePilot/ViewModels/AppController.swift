@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Network
 import SwiftUI
 import Combine
 
@@ -38,7 +37,6 @@ class AppController: ObservableObject {
     private let configFile = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         .appendingPathComponent("RoutePilot/config.json")
 
-    private var pathMonitor: NWPathMonitor?
     private var previousVPNNames: Set<String> = []
     private var isCheckingVPN = false
 
@@ -47,7 +45,7 @@ class AppController: ObservableObject {
         Task { await loadLogs() }
         checkPasswordless()
         refreshSystemVPNs()
-        startNetworkMonitor()
+        startVPNMonitoring()
     }
 
     // MARK: - 系统VPN列表
@@ -70,18 +68,50 @@ class AppController: ObservableObject {
         }
     }
 
-    // MARK: - 网络监控
-    private func startNetworkMonitor() {
-        pathMonitor = NWPathMonitor()
-        pathMonitor?.pathUpdateHandler = { [weak self] path in
-            NSLog("[RoutePilot] NWPathMonitor 触发: \(path.status)")
-            Task { @MainActor [weak self] in
-                self?.checkVPNStatus()
+    // MARK: - VPN 监控
+    private func startVPNMonitoring() {
+        Task {
+            await VPNService.shared.startMonitoring { [weak self] vpnName in
+                guard let self = self else { return }
+                self.handleVPNStatusChange(vpnName: vpnName)
             }
         }
-        pathMonitor?.start(queue: DispatchQueue.global())
-        NSLog("[RoutePilot] 网络监控已启动")
+        NSLog("[RoutePilot] VPN 监控已启动")
+
+        // 首次检查
         checkVPNStatus()
+    }
+
+    private func handleVPNStatusChange(vpnName: String?) {
+        guard let vpnName = vpnName else {
+            // 接口变化但无法确定 VPN 名称，执行完整检查
+            checkVPNStatus()
+            return
+        }
+
+        NSLog("[RoutePilot] VPN 状态变化: \(vpnName)")
+
+        // 更新 VPN 状态
+        Task {
+            let result = await VPNService.shared.getVPNStatusFromStore()
+            self.activeVPNs = result
+            self.vpnConnected = !result.isEmpty
+
+            // 更新 previousVPNNames
+            let currentNames = Set(result.map { $0.name })
+            let wasConnected = self.previousVPNNames.contains(vpnName)
+            let nowConnected = currentNames.contains(vpnName)
+
+            self.previousVPNNames = currentNames
+
+            // 处理连接/断开
+            if nowConnected && !wasConnected {
+                self.log("检测到 VPN 连接: \(vpnName)", level: .info, vpnName: vpnName)
+                self.autoAddRoutes(for: vpnName)
+            } else if !nowConnected && wasConnected {
+                self.log("检测到 VPN 断开: \(vpnName)", level: .info, vpnName: vpnName)
+            }
+        }
     }
 
     private func checkVPNStatus() {
@@ -93,15 +123,8 @@ class AppController: ObservableObject {
         NSLog("[RoutePilot] checkVPNStatus 开始")
 
         Task {
-            // 构建自定义接口映射
-            var customInterfaces: [String: String] = [:]
-            for config in vpnConfigs {
-                if let iface = config.customInterface, !iface.isEmpty {
-                    customInterfaces[config.name] = iface
-                }
-            }
-
-            let result = await VPNService.shared.getConnectedVPNs(customInterfaces: customInterfaces)
+            // 使用 SCDynamicStore 获取 VPN 状态
+            let result = await VPNService.shared.getVPNStatusFromStore()
 
             let previousNames = self.previousVPNNames
             let currentNames = Set(result.map { $0.name })
@@ -111,7 +134,7 @@ class AppController: ObservableObject {
             self.activeVPNs = result
             self.vpnConnected = !result.isEmpty
 
-            // 检测新连接的VPN，或首次检查时已连接的VPN
+            // 检测新连接的 VPN
             let newlyConnected = currentNames.subtracting(previousNames)
             let isFirstCheck = previousNames.isEmpty
             let vpnToProcess = isFirstCheck ? currentNames : newlyConnected
