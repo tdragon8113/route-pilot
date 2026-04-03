@@ -114,6 +114,18 @@ cat ~/Library/Logs/RoutePilot/operations.log
 cat /etc/sudoers.d/autoroute
 ```
 
+## 发布流程
+
+```bash
+# 创建版本标签触发 CI 和 Release
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions 工作流：
+- **CI** (`.github/workflows/ci.yml`) - 每次 push/PR 验证构建
+- **Release** (`.github/workflows/release.yml`) - 打标签时打包发布 DMG
+
 ## 注意事项
 
 - **沙盒限制**：启用 App Sandbox 可能限制文件写入和系统命令执行
