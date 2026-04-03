@@ -208,6 +208,12 @@ class AppController: ObservableObject {
         saveConfig()
     }
 
+    func moveRoutes(in vpnName: String, from source: IndexSet, to destination: Int) {
+        guard let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }) else { return }
+        vpnConfigs[vpnIndex].routes.move(fromOffsets: source, toOffset: destination)
+        saveConfig()
+    }
+
     enum MoveDirection {
         case up, down
     }

@@ -75,14 +75,21 @@ struct VPNQuickConfigView: View {
             }
 
             if let routes = config?.routes, !routes.isEmpty {
-                ForEach(Array(routes.enumerated()), id: \.element.id) { index, route in
-                    RouteRowView(
-                        route: route,
-                        vpnName: vpnName,
-                        canMoveUp: index > 0,
-                        canMoveDown: index < routes.count - 1
-                    )
+                List {
+                    ForEach(routes) { route in
+                        RouteRowView(
+                            route: route,
+                            vpnName: vpnName
+                        )
+                        .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                    }
+                    .onMove { source, destination in
+                        app.moveRoutes(in: vpnName, from: source, to: destination)
+                    }
                 }
+                .listStyle(.plain)
+                .frame(height: CGFloat(routes.count * 32))
+                .scrollDisabled(true)
             }
 
             // 添加新路由
@@ -140,18 +147,26 @@ struct VPNQuickConfigView: View {
 struct RouteRowView: View {
     let route: RouteItem
     let vpnName: String
-    let canMoveUp: Bool
-    let canMoveDown: Bool
     @ObservedObject private var app = AppController.shared
     @State private var isEditing: Bool = false
     @State private var editingNote: String = ""
+    @State private var isDragging: Bool = false
 
     var body: some View {
         HStack {
             // 拖拽手柄
             Image(systemName: "line.3.horizontal")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(isDragging ? .accentColor : .secondary)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            if !isDragging {
+                                isDragging = true
+                            }
+                        }
+                )
 
             Toggle("", isOn: Binding(
                 get: { route.enabled },
@@ -170,25 +185,6 @@ struct RouteRowView: View {
             }
 
             Spacer()
-
-            // 上下移动按钮
-            HStack(spacing: 2) {
-                Button(action: { app.moveRoute(route, in: vpnName, direction: .up) }) {
-                    Image(systemName: "chevron.up")
-                        .font(.caption2)
-                }
-                .buttonStyle(.borderless)
-                .disabled(!canMoveUp)
-                .opacity(canMoveUp ? 1 : 0.3)
-
-                Button(action: { app.moveRoute(route, in: vpnName, direction: .down) }) {
-                    Image(systemName: "chevron.down")
-                        .font(.caption2)
-                }
-                .buttonStyle(.borderless)
-                .disabled(!canMoveDown)
-                .opacity(canMoveDown ? 1 : 0.3)
-            }
 
             Button(action: {
                 editingNote = route.note ?? ""
@@ -232,5 +228,8 @@ struct RouteRowView: View {
             }
             .buttonStyle(.borderless)
         }
+        .padding(.vertical, 4)
+        .background(isDragging ? Color.accentColor.opacity(0.1) : Color.clear)
+        .cornerRadius(4)
     }
 }
