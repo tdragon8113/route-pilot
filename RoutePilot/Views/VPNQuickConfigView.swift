@@ -151,15 +151,13 @@ struct RouteRowView: View {
             .labelsHidden()
             .controlSize(.small)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(route.destination)
-                    .font(.caption)
+            Text(route.destination)
+                .font(.caption)
 
-                if let note = route.note, !note.isEmpty {
-                    Text(note)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+            if let note = route.note, !note.isEmpty {
+                Text(note)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             Spacer()
