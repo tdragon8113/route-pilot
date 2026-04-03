@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git reset:*)",
+      "Bash(git clean:*)",
+      "Bash(xcodebuild -project AutoRoute.xcodeproj -scheme AutoRoute -configuration Debug build)",
+      "Bash(killall AutoRoute)",
+      "Bash(open ~/Library/Developer/Xcode/DerivedData/AutoRoute-gbfrctynvouowlhaothpyqosmeqf/Build/Products/Debug/AutoRoute.app)",
+      "Bash(codesign -d --entitlements - ~/Library/Developer/Xcode/DerivedData/AutoRoute-gbfrctynvouowlhaothpyqosmeqf/Build/Products/Debug/AutoRoute.app)",
+      "mcp__idea__build_project",
+      "Bash(pkill -f AutoRoute.app)",
+      "Bash(open ~/Library/Developer/Xcode/DerivedData/AutoRoute-*/Build/Products/Debug/AutoRoute.app)"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+# Xcode
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Build
+build/
+DerivedData/
+*.build
+
+# App
+*.app
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods
+Pods/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# macOS
+.DS_Store
+*.swp
+*~.nib
+
+# Temporary
+*.tmp
+*.bak
