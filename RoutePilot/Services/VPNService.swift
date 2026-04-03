@@ -5,6 +5,7 @@
 
 import Foundation
 import Network
+import SystemConfiguration
 
 /// VPN 检测服务
 actor VPNService {
@@ -12,6 +13,9 @@ actor VPNService {
     static let shared = VPNService()
 
     private var pathMonitor: NWPathMonitor?
+    private var store: SCDynamicStore?
+    private var runLoopSource: CFRunLoopSource?
+    private var monitoringCallback: (@MainActor (String?) -> Void)?
 
     private init() {}
 
@@ -128,5 +132,98 @@ actor VPNService {
         }
 
         return routes
+    }
+
+    /// 启动 SCDynamicStore 监听
+    func startMonitoring(callback: @escaping @MainActor (String?) -> Void) {
+        self.monitoringCallback = callback
+
+        var storeContext = SCDynamicStoreContext(
+            version: 0,
+            info: Unmanaged.passUnretained(self).toOpaque(),
+            retain: nil,
+            release: nil,
+            copyDescription: nil
+        )
+
+        store = SCDynamicStoreCreate(
+            nil,
+            "RoutePilot" as CFString,
+            { store, changedKeys, info in
+                guard let info = info else { return }
+                let service = Unmanaged<VPNService>.fromOpaque(info).takeUnretainedValue()
+                Task {
+                    await service.handleStoreChange(changedKeys: changedKeys)
+                }
+            },
+            &storeContext
+        )
+
+        guard let store = store else {
+            NSLog("[VPNService] Failed to create SCDynamicStore")
+            return
+        }
+
+        // 监听所有网络接口的 IPv4 配置变化
+        let patterns = ["State:/Network/Interface/.*/IPv4"] as CFArray
+        SCDynamicStoreSetNotificationKeys(store, nil, patterns)
+
+        // 创建 RunLoop Source 并添加到 RunLoop
+        runLoopSource = SCDynamicStoreCreateRunLoopSource(nil, store, 0)
+        if let source = runLoopSource {
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, CFRunLoopMode.defaultMode)
+        }
+
+        NSLog("[VPNService] SCDynamicStore 监控已启动")
+    }
+
+    /// 处理 SCDynamicStore 变化
+    private func handleStoreChange(changedKeys: CFArray) async {
+        guard let keys = changedKeys as? [String] else { return }
+
+        for key in keys {
+            // 提取接口名: State:/Network/Interface/ppp0/IPv4
+            let parts = key.split(separator: "/")
+            guard parts.count >= 4 else { continue }
+
+            let interface = String(parts[3])
+
+            // 过滤 VPN 接口
+            if isVPNInterface(interface) {
+                NSLog("[VPNService] VPN 接口变化: \(interface)")
+
+                // 获取该接口对应的 VPN 名称
+                if let vpnName = getVPNNameForInterface(interface) {
+                    // 在 actor 上下文中先获取 callback
+                    let callback = monitoringCallback
+                    await MainActor.run {
+                        callback?(vpnName)
+                    }
+                }
+            }
+        }
+    }
+
+    /// 判断是否为 VPN 接口
+    private func isVPNInterface(_ interface: String) -> Bool {
+        interface.hasPrefix("ppp") ||
+        interface.hasPrefix("utun") ||
+        interface.hasPrefix("ipsec")
+    }
+
+    /// 获取接口对应的 VPN 名称（Task 2 将实现）
+    private func getVPNNameForInterface(_ interface: String) -> String? {
+        // Will be implemented in Task 2
+        return nil
+    }
+
+    /// 停止监听
+    func stopMonitoring() {
+        guard let source = runLoopSource else { return }
+        CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, CFRunLoopMode.defaultMode)
+        runLoopSource = nil
+        store = nil
+        monitoringCallback = nil
+        NSLog("[VPNService] SCDynamicStore 监控已停止")
     }
 }
