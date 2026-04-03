@@ -48,11 +48,6 @@ jobs:
 
           echo "CI passed. Proceeding with release."
 
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode-action@v1
-        with:
-          xcode-version: latest-stable
-
       - name: Build
         run: |
           xcodebuild -project RoutePilot.xcodeproj \
