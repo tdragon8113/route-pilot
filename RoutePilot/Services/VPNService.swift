@@ -166,10 +166,10 @@ actor VPNService {
         let patterns = ["State:/Network/Interface/.*/IPv4"] as CFArray
         SCDynamicStoreSetNotificationKeys(store, nil, patterns)
 
-        // 创建 RunLoop Source 并添加到 RunLoop
+        // 创建 RunLoop Source 并添加到主线程 RunLoop
         runLoopSource = SCDynamicStoreCreateRunLoopSource(nil, store, 0)
         if let source = runLoopSource {
-            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, CFRunLoopMode.defaultMode)
+            CFRunLoopAddSource(CFRunLoopGetMain(), source, CFRunLoopMode.defaultMode)
         }
 
         NSLog("[VPNService] SCDynamicStore 监控已启动")
@@ -178,6 +178,9 @@ actor VPNService {
     /// 处理 SCDynamicStore 变化
     private func handleStoreChange(changedKeys: CFArray) async {
         guard let keys = changedKeys as? [String] else { return }
+
+        var vpnChanged = false
+        var vpnName: String?
 
         for key in keys {
             // 提取接口名: State:/Network/Interface/ppp0/IPv4
@@ -189,15 +192,21 @@ actor VPNService {
             // 过滤 VPN 接口
             if isVPNInterface(interface) {
                 NSLog("[VPNService] VPN 接口变化: \(interface)")
+                vpnChanged = true
 
                 // 获取该接口对应的 VPN 名称
-                if let vpnName = getVPNNameForInterface(interface) {
-                    // 在 actor 上下文中先获取 callback
-                    let callback = monitoringCallback
-                    await MainActor.run {
-                        callback?(vpnName)
-                    }
+                if let name = getVPNNameForInterface(interface) {
+                    vpnName = name
                 }
+            }
+        }
+
+        // 如果 VPN 接口有变化，触发回调
+        if vpnChanged {
+            let callback = monitoringCallback
+            await MainActor.run {
+                // 传递 nil 表示需要完整检查状态
+                callback?(vpnName)
             }
         }
     }
@@ -277,7 +286,7 @@ actor VPNService {
     /// 停止监听
     func stopMonitoring() {
         guard let source = runLoopSource else { return }
-        CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, CFRunLoopMode.defaultMode)
+        CFRunLoopRemoveSource(CFRunLoopGetMain(), source, CFRunLoopMode.defaultMode)
         runLoopSource = nil
         store = nil
         monitoringCallback = nil
