@@ -75,21 +75,19 @@ struct VPNQuickConfigView: View {
             }
 
             if let routes = config?.routes, !routes.isEmpty {
-                List {
-                    ForEach(routes) { route in
-                        RouteRowView(
-                            route: route,
-                            vpnName: vpnName
-                        )
-                        .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                    }
-                    .onMove { source, destination in
-                        app.moveRoutes(in: vpnName, from: source, to: destination)
+                ForEach(routes) { route in
+                    RouteRowView(
+                        route: route,
+                        vpnName: vpnName
+                    )
+                }
+                .onDelete { offsets in
+                    for offset in offsets.reversed() {
+                        if let routes = config?.routes {
+                            app.removeRoute(routes[offset], from: vpnName)
+                        }
                     }
                 }
-                .listStyle(.plain)
-                .frame(height: CGFloat(routes.count * 32))
-                .scrollDisabled(true)
             }
 
             // 添加新路由
@@ -151,6 +149,7 @@ struct RouteRowView: View {
     @State private var isEditing: Bool = false
     @State private var editingNote: String = ""
     @State private var isDragging: Bool = false
+    @State private var isTargeted: Bool = false
 
     var body: some View {
         HStack {
@@ -228,8 +227,24 @@ struct RouteRowView: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 4)
-        .background(isDragging ? Color.accentColor.opacity(0.1) : Color.clear)
+        .padding(.vertical, 2)
+        .padding(.horizontal, 4)
+        .background(isTargeted ? Color.accentColor.opacity(0.15) : Color.clear)
         .cornerRadius(4)
+        .overlay {
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(isTargeted ? Color.accentColor : Color.clear, lineWidth: 2)
+        }
+        .draggable(route.id.uuidString)
+        .dropDestination(for: String.self) { items, location in
+            guard let droppedId = items.first,
+                  let droppedRoute = app.vpnConfigs.first(where: { $0.name == vpnName })?.routes.first(where: { $0.id.uuidString == droppedId }) else {
+                return false
+            }
+            app.moveRoute(droppedRoute, toPositionOf: route, in: vpnName)
+            return true
+        } isTargeted: { targeted in
+            isTargeted = targeted
+        }
     }
 }

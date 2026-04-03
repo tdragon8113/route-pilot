@@ -208,6 +208,20 @@ class AppController: ObservableObject {
         saveConfig()
     }
 
+    func moveRoute(_ route: RouteItem, toPositionOf target: RouteItem, in vpnName: String) {
+        guard let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }),
+              let fromIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }),
+              let toIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == target.id }) else { return }
+
+        let routeToMove = vpnConfigs[vpnIndex].routes.remove(at: fromIndex)
+
+        // 调整目标索引（如果从前面移到后面，索引会变化）
+        let adjustedToIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
+
+        vpnConfigs[vpnIndex].routes.insert(routeToMove, at: adjustedToIndex)
+        saveConfig()
+    }
+
     func moveRoutes(in vpnName: String, from source: IndexSet, to destination: Int) {
         guard let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }) else { return }
         vpnConfigs[vpnIndex].routes.move(fromOffsets: source, toOffset: destination)
