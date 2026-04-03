@@ -152,10 +152,10 @@ class AppController: ObservableObject {
     }
 
     // MARK: - 路由配置
-    func addRoute(_ destination: String, to vpnName: String) {
+    func addRoute(_ destination: String, note: String? = nil, to vpnName: String) {
         log("添加路由规则: \(destination) -> \(vpnName)", vpnName: vpnName)
         if let index = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-            vpnConfigs[index].routes.append(RouteItem(destination: destination))
+            vpnConfigs[index].routes.append(RouteItem(destination: destination, note: note))
             saveConfig()
             log("路由规则已保存", level: .success, vpnName: vpnName)
         } else {
@@ -174,6 +174,15 @@ class AppController: ObservableObject {
         if let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
             if let routeIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }) {
                 vpnConfigs[vpnIndex].routes[routeIndex].enabled = enabled
+                saveConfig()
+            }
+        }
+    }
+
+    func updateNote(_ note: String?, for route: RouteItem, in vpnName: String) {
+        if let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
+            if let routeIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }) {
+                vpnConfigs[vpnIndex].routes[routeIndex].note = note
                 saveConfig()
             }
         }

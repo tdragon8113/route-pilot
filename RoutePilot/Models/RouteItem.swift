@@ -9,11 +9,13 @@ import Foundation
 struct RouteItem: Identifiable, Codable {
     let id: UUID
     var destination: String
+    var note: String?
     var enabled: Bool
 
-    init(destination: String, enabled: Bool = true) {
+    init(destination: String, note: String? = nil, enabled: Bool = true) {
         self.id = UUID()
         self.destination = destination
+        self.note = note
         self.enabled = enabled
     }
 }
