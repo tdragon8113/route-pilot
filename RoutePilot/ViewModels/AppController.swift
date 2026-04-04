@@ -29,6 +29,10 @@ class AppController: ObservableObject {
     @Published var logs: [LogEntry] = []
     @Published var logFilter: LogEntry.LogLevel = .info
 
+    // MARK: - Toast 提示
+    @Published var currentToast: ToastItem?
+    private var toastTimer: DispatchWorkItem?
+
     // MARK: - 当前路由
     @Published var currentRoutes: [String] = []
     @Published var isLoadingRoutes: Bool = false
@@ -117,6 +121,14 @@ class AppController: ObservableObject {
 
     // MARK: - 路由配置
     func addRoute(_ destination: String, note: String? = nil, to vpnName: String) {
+        // 检查是否已存在
+        if let config = vpnConfigs.first(where: { $0.name == vpnName }),
+           config.routes.contains(where: { $0.destination == destination }) {
+            log("路由规则已存在: \(destination)", level: .warning, vpnName: vpnName)
+            showToast("路由规则已存在", type: .warning)
+            return
+        }
+
         // 判断路由类型
         let type: RouteType
         if destination.contains("/") {
@@ -144,6 +156,7 @@ class AppController: ObservableObject {
     func setVPNEnabled(_ vpnName: String, enabled: Bool) {
         updateVPNConfig(vpnName) { $0.enabled = enabled }
         updateMenuBarStatus()
+        showToast(enabled ? "已启用 \(vpnName)" : "已禁用 \(vpnName)", type: .success)
     }
 
     /// 更新菜单栏图标状态
@@ -194,6 +207,7 @@ class AppController: ObservableObject {
                 config.routes[routeIndex].enabled = enabled
             }
         }
+        showToast(enabled ? "已启用路由" : "已禁用路由", type: .success)
     }
 
     func updateNote(_ note: String?, for route: RouteItem, in vpnName: String) {
@@ -366,6 +380,28 @@ class AppController: ObservableObject {
 
         // 写入日志文件
         Task { await LogService.shared.append(entry) }
+    }
+
+    /// 显示 Toast 提示
+    func showToast(_ message: String, type: ToastItem.ToastType, duration: Double = 1.5) {
+        // 取消之前的定时器
+        toastTimer?.cancel()
+
+        currentToast = ToastItem(message: message, type: type, duration: duration)
+
+        // 设置新的定时器
+        let timer = DispatchWorkItem { [weak self] in
+            self?.currentToast = nil
+        }
+        toastTimer = timer
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: timer)
+    }
+
+    /// 清除 Toast
+    func clearToast() {
+        toastTimer?.cancel()
+        toastTimer = nil
+        currentToast = nil
     }
 
     private func loadLogs() async {

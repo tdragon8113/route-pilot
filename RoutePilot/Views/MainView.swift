@@ -12,6 +12,7 @@ struct MainView: View {
     @Binding var showDetailView: Bool
     @Binding var detailInitialTab: Int
     @Binding var showSettings: Bool
+    @Binding var showTools: Bool
     @ObservedObject private var app = AppController.shared
     @State private var isInstalling = false
     @State private var installError: String?
@@ -26,8 +27,10 @@ struct MainView: View {
                 isInstalling = false
                 if result.0 {
                     app.passwordlessConfigured = true
+                    app.showToast("后台服务已启用", type: .success)
                 } else {
                     installError = result.1 ?? "安装失败"
+                    app.showToast("启用失败", type: .error)
                 }
             }
         }
@@ -105,7 +108,8 @@ struct MainView: View {
             Divider()
 
             // 选中 VPN 的路由配置
-            if let vpnName = selectedVPN {
+            if let vpnName = selectedVPN,
+               app.vpnConfigs.contains(where: { $0.name == vpnName }) {
                 VPNQuickConfigView(
                     vpnName: vpnName,
                     newRoute: $newRoute,
@@ -123,7 +127,7 @@ struct MainView: View {
                     detailInitialTab: $detailInitialTab
                 )
                 .id(activeVPN.name)
-            } else if let firstConfig = app.vpnConfigs.first(where: { $0.enabled && !$0.hidden }) {
+            } else if let firstConfig = app.vpnConfigs.first(where: { !$0.hidden }) {
                 VPNQuickConfigView(
                     vpnName: firstConfig.name,
                     newRoute: $newRoute,
@@ -187,6 +191,12 @@ struct MainView: View {
                 }
                 .buttonStyle(.borderless)
                 .help("设置")
+
+                Button(action: { showTools = true }) {
+                    Image(systemName: "wrench.and.screwdriver")
+                }
+                .buttonStyle(.borderless)
+                .help("工具")
 
                 Spacer()
 

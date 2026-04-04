@@ -13,11 +13,14 @@ struct MenuBarView: View {
     @State private var showDetailView: Bool = false
     @State private var detailInitialTab: Int = 0
     @State private var showSettings: Bool = false
+    @State private var showTools: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if showSettings {
                 SettingsView(showSettings: $showSettings)
+            } else if showTools {
+                ToolsView(showTools: $showTools)
             } else if showDetailView {
                 DetailView(
                     showDetailView: $showDetailView,
@@ -30,12 +33,23 @@ struct MenuBarView: View {
                     newRoute: $newRoute,
                     showDetailView: $showDetailView,
                     detailInitialTab: $detailInitialTab,
-                    showSettings: $showSettings
+                    showSettings: $showSettings,
+                    showTools: $showTools
                 )
             }
         }
         .padding()
         .frame(width: 280)
+        .overlay(alignment: .top) {
+            if let toast = app.currentToast {
+                ToastView(toast: toast, onDismiss: { app.clearToast() })
+                    .padding(.top, 12)
+                    .transition(.asymmetric(
+                        insertion: .opacity.animation(.easeOut(duration: 0.25)),
+                        removal: .opacity.animation(.easeOut(duration: 0.25))
+                    ))
+            }
+        }
         .onAppear {
             app.refreshSystemVPNs()
         }

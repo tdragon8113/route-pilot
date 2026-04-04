@@ -18,8 +18,10 @@ struct SettingsView: View {
     private func toggleLaunchAtLogin(_ enabled: Bool) {
         if enabled {
             LoginServiceKit.addLoginItems()
+            app.showToast("已开启开机启动", type: .success)
         } else {
             LoginServiceKit.removeLoginItems()
+            app.showToast("已关闭开机启动", type: .success)
         }
         launchAtLogin = LoginServiceKit.isExistLoginItems()
     }
@@ -45,8 +47,10 @@ struct SettingsView: View {
                 if result.0 {
                     app.passwordlessConfigured = true
                     checkDaemonStatus()
+                    app.showToast("后台服务已启用", type: .success)
                 } else {
                     daemonError = result.1 ?? "安装失败"
+                    app.showToast("启用失败", type: .error)
                 }
             }
         }
@@ -59,8 +63,10 @@ struct SettingsView: View {
             checkDaemonStatus()
             // 卸载时同时清理了免密授权配置
             app.passwordlessConfigured = false
+            app.showToast("后台服务已卸载", type: .success)
         } else {
             daemonError = result.1 ?? "卸载失败"
+            app.showToast("卸载失败", type: .error)
         }
     }
 
@@ -69,8 +75,10 @@ struct SettingsView: View {
         let result = DaemonManager.start()
         if result.0 {
             checkDaemonStatus()
+            app.showToast("后台服务已启动", type: .success)
         } else {
             daemonError = result.1 ?? "启动失败"
+            app.showToast("启动失败", type: .error)
         }
     }
 
@@ -79,8 +87,10 @@ struct SettingsView: View {
         let result = DaemonManager.stop()
         if result.0 {
             checkDaemonStatus()
+            app.showToast("后台服务已停止", type: .success)
         } else {
             daemonError = result.1 ?? "停止失败"
+            app.showToast("停止失败", type: .error)
         }
     }
 
@@ -99,8 +109,7 @@ struct SettingsView: View {
                 Spacer()
             }
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 16) {
                     // MARK: - 后台服务
                     SettingsSection(title: "后台服务", icon: "server.rack") {
                         VStack(alignment: .leading, spacing: 8) {
@@ -250,7 +259,6 @@ struct SettingsView: View {
                     }
                 }
             }
-        }
         .onAppear {
             launchAtLogin = checkLaunchStatus()
             checkDaemonStatus()

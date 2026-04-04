@@ -21,9 +21,6 @@ struct VPNRowView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(borderColor, lineWidth: 1)
                 )
-                .onTapGesture {
-                    onTap()
-                }
 
             HStack(spacing: 10) {
                 // 状态图标
@@ -45,12 +42,12 @@ struct VPNRowView: View {
 
                 // VPN 信息
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Text(config.name)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(config.enabled ? .primary : .secondary)
+                    Text(config.name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(config.enabled ? .primary : .secondary)
 
+                    HStack(spacing: 4) {
                         if !config.enabled {
                             Text("已禁用")
                                 .font(.caption2)
@@ -60,22 +57,18 @@ struct VPNRowView: View {
                                 .padding(.vertical, 1)
                                 .background(Color.orange.opacity(0.15))
                                 .cornerRadius(3)
-                        }
-                    }
-
-                    HStack(spacing: 4) {
-                        if config.enabled && isConnected {
+                        } else if isConnected {
                             Text("已连接")
                                 .font(.caption2)
+                                .fontWeight(.medium)
                                 .foregroundColor(.green)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(Color.green.opacity(0.15))
+                                .cornerRadius(3)
                         }
 
                         if !config.routes.isEmpty {
-                            if config.enabled && isConnected {
-                                Text("•")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
                             Text("\(config.routes.count) 条路由")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -85,16 +78,15 @@ struct VPNRowView: View {
 
                 Spacer()
 
-                // 隐藏按钮（仅禁用时显示）
-                if !config.enabled {
-                    Button(action: { app.hideVPN(config.name) }) {
-                        Image(systemName: "eye.slash")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.borderless)
-                    .help("隐藏此 VPN")
+                // 隐藏按钮（固定宽度，避免切换时跳动）
+                Button(action: { app.hideVPN(config.name) }) {
+                    Image(systemName: "eye.slash")
+                        .font(.caption2)
+                        .foregroundColor(config.enabled ? .clear : .secondary)
                 }
+                .buttonStyle(.borderless)
+                .disabled(config.enabled)
+                .help(config.enabled ? "" : "隐藏此 VPN")
 
                 // 启用开关
                 Toggle("", isOn: Binding(
@@ -105,10 +97,13 @@ struct VPNRowView: View {
                 ))
                 .labelsHidden()
                 .controlSize(.small)
-                .allowsHitTesting(true)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 10)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contextMenu {
@@ -120,17 +115,17 @@ struct VPNRowView: View {
 
     // 辅助计算属性
     private var backgroundColor: Color {
-        if !config.enabled {
-            return Color.gray.opacity(0.08)
+        if isSelected {
+            return config.enabled ? Color.blue.opacity(0.1) : Color.orange.opacity(0.08)
         }
-        return isSelected ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05)
+        return config.enabled ? Color.gray.opacity(0.05) : Color.gray.opacity(0.08)
     }
 
     private var borderColor: Color {
-        if !config.enabled {
-            return Color.gray.opacity(0.15)
+        if isSelected {
+            return config.enabled ? Color.blue.opacity(0.3) : Color.orange.opacity(0.25)
         }
-        return isSelected ? Color.blue.opacity(0.3) : Color.gray.opacity(0.1)
+        return config.enabled ? Color.gray.opacity(0.1) : Color.gray.opacity(0.15)
     }
 
     private var statusBackgroundColor: Color {

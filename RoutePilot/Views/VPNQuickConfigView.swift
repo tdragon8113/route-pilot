@@ -101,37 +101,35 @@ struct VPNQuickConfigView: View {
             }
 
             if let routes = config?.routes, !routes.isEmpty {
-                ForEach(Array(routes.enumerated()), id: \.element.id) { index, route in
-                    RouteRowView(
-                        route: route,
-                        vpnName: vpnName,
-                        isBeingDragged: draggingId == route.id,
-                        offsetY: offsetForIndex(index, routes: routes),
-                        onDragChanged: { id, progress in
-                            draggingId = id
-                            dragProgress = progress
-                        },
-                        onDragEnded: {
-                            if let startIdx = routes.firstIndex(where: { $0.id == draggingId }) {
-                                let targetOffset = Int(round(dragProgress))
-                                let targetIdx = startIdx + targetOffset
-                                let clampedTarget = max(0, min(routes.count - 1, targetIdx))
-                                if clampedTarget != startIdx {
-                                    app.moveRouteToIndex(routes[startIdx], toIndex: clampedTarget, in: vpnName)
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(Array(routes.enumerated()), id: \.element.id) { index, route in
+                            RouteRowView(
+                                route: route,
+                                vpnName: vpnName,
+                                isBeingDragged: draggingId == route.id,
+                                offsetY: offsetForIndex(index, routes: routes),
+                                onDragChanged: { id, progress in
+                                    draggingId = id
+                                    dragProgress = progress
+                                },
+                                onDragEnded: {
+                                    if let startIdx = routes.firstIndex(where: { $0.id == draggingId }) {
+                                        let targetOffset = Int(round(dragProgress))
+                                        let targetIdx = startIdx + targetOffset
+                                        let clampedTarget = max(0, min(routes.count - 1, targetIdx))
+                                        if clampedTarget != startIdx {
+                                            app.moveRouteToIndex(routes[startIdx], toIndex: clampedTarget, in: vpnName)
+                                        }
+                                    }
+                                    draggingId = nil
+                                    dragProgress = 0
                                 }
-                            }
-                            draggingId = nil
-                            dragProgress = 0
-                        }
-                    )
-                }
-                .onDelete { offsets in
-                    for offset in offsets.reversed() {
-                        if let routes = config?.routes {
-                            app.removeRoute(routes[offset], from: vpnName)
+                            )
                         }
                     }
                 }
+                .frame(height: min(CGFloat(routes.count) * 36 + 4, 150))
             }
 
             // 添加新路由
