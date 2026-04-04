@@ -265,7 +265,7 @@ class Daemon {
 
         store = SCDynamicStoreCreate(
             nil,
-            "com.tangda.RoutePilotDaemon" as CFString,
+            "RoutePilotDaemon" as CFString,
             { store, changedKeys, info in
                 guard let info = info else { return }
                 let daemon = Unmanaged<Daemon>.fromOpaque(info).takeUnretainedValue()
