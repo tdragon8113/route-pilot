@@ -27,6 +27,13 @@ struct ToolsView: View {
     @State private var availableInterfaces: [String] = []
     @State private var isLoadingRoutes = false
 
+    // 路由追踪状态
+    @State private var tracerouteTarget: String = ""
+    @State private var tracerouteHops: [TracerouteHop] = []
+    @State private var isTracing = false
+    @State private var tracerouteError: String?
+    @State private var tracerouteProcess: Process?
+
     struct DebugResult {
         let resolvedIP: String?
         let interface: String
@@ -293,6 +300,87 @@ struct ToolsView: View {
                 loadRouteTable()
             }
 
+            // 路由追踪
+            VStack(alignment: .leading, spacing: 8) {
+                Text("路由追踪")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("追踪到目标的网络路径")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack {
+                    TextField("输入目标域名或 IP", text: $tracerouteTarget)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.small)
+                        .disabled(isTracing)
+
+                    if isTracing {
+                        Button("取消") {
+                            stopTraceroute()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    } else {
+                        Button("追踪") {
+                            startTraceroute()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .disabled(tracerouteTarget.isEmpty)
+                    }
+                }
+
+                if !tracerouteHops.isEmpty {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(tracerouteHops) { hop in
+                                HStack {
+                                    Text("\(hop.hopNumber)")
+                                        .font(.caption2)
+                                        .frame(width: 20, alignment: .leading)
+                                        .foregroundColor(.secondary)
+
+                                    if let ip = hop.ip {
+                                        Text(ip)
+                                            .font(.caption2)
+                                            .foregroundColor(.blue)
+
+                                        if let time = hop.time {
+                                            Text(time)
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    } else {
+                                        Text("*")
+                                            .font(.caption2)
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 120)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color(nsColor: .controlBackgroundColor))
+                    )
+                }
+
+                if let error = tracerouteError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+
             Spacer()
         }
     }
@@ -492,5 +580,84 @@ struct ToolsView: View {
         }
 
         filteredRoutes = result
+    }
+
+    private func startTraceroute() {
+        guard !tracerouteTarget.isEmpty else { return }
+        isTracing = true
+        tracerouteHops = []
+        tracerouteError = nil
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/sbin/traceroute")
+        process.arguments = [tracerouteTarget]
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        // 实时读取输出
+        pipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            guard !data.isEmpty else { return }
+            let line = String(data: data, encoding: .utf8) ?? ""
+
+            // 解析每一行
+            if let hop = parseTracerouteLine(line) {
+                DispatchQueue.main.async {
+                    self.tracerouteHops.append(hop)
+                }
+            }
+        }
+
+        do {
+            try process.run()
+            tracerouteProcess = process
+
+            // 监听进程结束
+            process.terminationHandler = { _ in
+                DispatchQueue.main.async {
+                    self.isTracing = false
+                    self.tracerouteProcess = nil
+                }
+            }
+        } catch {
+            isTracing = false
+            tracerouteError = "启动失败"
+        }
+    }
+
+    private func stopTraceroute() {
+        tracerouteProcess?.terminate()
+        tracerouteProcess = nil
+        isTracing = false
+    }
+
+    private func parseTracerouteLine(_ line: String) -> TracerouteHop? {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+
+        // 匹配格式: "1  192.168.1.1 (192.168.1.1)  1.234 ms"
+        // 或: "2  * * *"
+        let parts = trimmed.split(separator: " ", omittingEmptySubsequences: true)
+        guard let hopNum = Int(parts[0]) else { return nil }
+
+        if parts[1] == "*" {
+            return TracerouteHop(hopNumber: hopNum, ip: nil, hostname: nil, time: nil)
+        }
+
+        let ip = String(parts[1])
+        var hostname: String? = nil
+        var time: String? = nil
+
+        // 查找时间
+        for i in 2..<parts.count {
+            if parts[i].contains("ms") {
+                time = String(parts[i])
+                break
+            }
+        }
+
+        return TracerouteHop(hopNumber: hopNum, ip: ip, hostname: hostname, time: time)
     }
 }
