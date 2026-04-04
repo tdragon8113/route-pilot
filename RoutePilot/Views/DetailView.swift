@@ -67,9 +67,17 @@ struct DetailView: View {
                     }
                 }
                 .controlSize(.small)
+                .disabled(vpnStatus == nil)
             }
 
-            if app.isLoadingRoutes {
+            if vpnStatus == nil {
+                VStack {
+                    Spacer()
+                    Text("VPN 未连接")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+            } else if app.isLoadingRoutes {
                 VStack {
                     Spacer()
                     ProgressView()
@@ -108,6 +116,15 @@ struct DetailView: View {
             // 进入时自动获取路由
             if let iface = vpnStatus?.interface {
                 app.fetchCurrentRoutes(interface: iface)
+            }
+        }
+        .onChange(of: vpnStatus) { newValue in
+            // VPN 状态变化时更新路由
+            if let iface = newValue?.interface {
+                app.fetchCurrentRoutes(interface: iface)
+            } else {
+                // VPN 断开时清空路由
+                app.currentRoutes = []
             }
         }
     }
