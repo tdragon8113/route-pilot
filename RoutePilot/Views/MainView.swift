@@ -13,10 +13,29 @@ struct MainView: View {
     @Binding var detailInitialTab: Int
     @Binding var showSettings: Bool
     @ObservedObject private var app = AppController.shared
+    @State private var isInstalling = false
+    @State private var installError: String?
+
+    private func installBackgroundService() {
+        isInstalling = true
+        installError = nil
+
+        Task {
+            let result = DaemonManager.install()
+            await MainActor.run {
+                isInstalling = false
+                if result.0 {
+                    app.passwordlessConfigured = true
+                } else {
+                    installError = result.1 ?? "安装失败"
+                }
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 后台服务未启用提示（统一提示，引导到设置页面一键启用）
+            // 后台服务未启用提示（直接一键启用）
             if !DaemonManager.isInstalled {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -24,16 +43,27 @@ struct MainView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("后台服务未启用")
                             .font(.caption)
-                        Text("VPN 连接时无法自动添加路由")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        if let error = installError {
+                            Text(error)
+                                .font(.caption2)
+                                .foregroundColor(.red)
+                        } else {
+                            Text("VPN 连接时无法自动添加路由")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     Spacer()
-                    Button("启用") {
-                        showSettings = true
+                    if isInstalling {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Button("启用") {
+                            installBackgroundService()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
                 }
                 .padding(8)
                 .background(
