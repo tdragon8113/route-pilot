@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var daemonInstalled = false
     @State private var daemonRunning = false
     @State private var daemonError: String?
+    @State private var isSettingUp = false
 
     private func toggleLaunchAtLogin(_ enabled: Bool) {
         if enabled {
@@ -32,18 +33,37 @@ struct SettingsView: View {
         daemonRunning = DaemonManager.isRunning
     }
 
-    private func installDaemon() {
-        guard app.passwordlessConfigured else {
-            daemonError = "请先配置免密授权"
-            return
-        }
-
+    /// 一键启用后台服务：配置免密授权 + 安装守护进程
+    private func setupBackgroundService() {
+        isSettingUp = true
         daemonError = nil
-        let result = DaemonManager.install()
-        if result.0 {
-            checkDaemonStatus()
-        } else {
-            daemonError = result.1 ?? "安装失败"
+
+        Task {
+            // 步骤 1: 配置免密授权（如果未配置）
+            if !app.passwordlessConfigured {
+                let success = await RouteService.shared.configurePasswordless()
+                if !success {
+                    await MainActor.run {
+                        daemonError = "免密授权配置失败"
+                        isSettingUp = false
+                    }
+                    return
+                }
+                await MainActor.run {
+                    app.passwordlessConfigured = true
+                }
+            }
+
+            // 步骤 2: 安装守护进程
+            let result = DaemonManager.install()
+            await MainActor.run {
+                isSettingUp = false
+                if result.0 {
+                    checkDaemonStatus()
+                } else {
+                    daemonError = result.1 ?? "安装失败"
+                }
+            }
         }
     }
 
@@ -93,62 +113,63 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // MARK: - 后台服务（放在最前面，最重要的设置）
+                    // MARK: - 后台服务
                     SettingsSection(title: "后台服务", icon: "server.rack") {
                         VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("守护进程")
-                                        .font(.subheadline)
-                                    Text("VPN 连接时自动添加路由，退出应用后仍生效")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                Spacer()
-                                if daemonInstalled {
-                                    Image(systemName: daemonRunning ? "checkmark.circle.fill" : "pause.circle.fill")
-                                        .foregroundColor(daemonRunning ? .green : .orange)
-                                        .font(.caption)
-                                }
-                            }
+                            Text("VPN 连接时自动添加路由，退出应用后仍生效")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
 
-                            // 未安装时显示醒目提示
                             if !daemonInstalled {
-                                VStack(alignment: .leading, spacing: 6) {
+                                // 未安装：显示一键启用按钮
+                                VStack(alignment: .leading, spacing: 8) {
                                     HStack(spacing: 4) {
-                                        Image(systemName: "exclamationmark.triangle.fill")
-                                            .foregroundColor(.orange)
-                                        Text("自动路由功能需要安装守护进程")
+                                        Image(systemName: "info.circle")
+                                            .foregroundColor(.blue)
+                                        Text("点击下方按钮，自动完成配置")
                                             .font(.caption)
-                                            .foregroundColor(.orange)
+                                            .foregroundColor(.secondary)
                                     }
 
-                                    if !app.passwordlessConfigured {
-                                        Text("请先在下方「权限设置」中配置免密授权")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-                                    } else {
-                                        Button("安装守护进程") {
-                                            installDaemon()
+                                    Button(action: setupBackgroundService) {
+                                        HStack {
+                                            if isSettingUp {
+                                                ProgressView()
+                                                    .controlSize(.small)
+                                                Text("配置中...")
+                                            } else {
+                                                Image(systemName: "power")
+                                                Text("启用后台服务")
+                                            }
                                         }
-                                        .buttonStyle(.borderedProminent)
-                                        .controlSize(.small)
+                                        .frame(maxWidth: .infinity)
                                     }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.regular)
+                                    .disabled(isSettingUp)
+
+                                    Text("将自动配置免密授权并安装守护进程")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
                                 }
                                 .padding(8)
                                 .background(
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.orange.opacity(0.1))
+                                        .fill(Color.blue.opacity(0.08))
                                 )
                             } else {
-                                // 已安装显示状态
+                                // 已安装：显示状态和控制按钮
                                 HStack {
-                                    Text(daemonRunning ? "运行中" : "已停止")
-                                        .font(.caption)
-                                        .foregroundColor(daemonRunning ? .green : .orange)
+                                    HStack(spacing: 4) {
+                                        Image(systemName: daemonRunning ? "checkmark.circle.fill" : "pause.circle.fill")
+                                            .foregroundColor(daemonRunning ? .green : .orange)
+                                        Text(daemonRunning ? "运行中" : "已停止")
+                                            .font(.caption)
+                                            .foregroundColor(daemonRunning ? .green : .orange)
+                                    }
+
                                     Spacer()
 
-                                    // 启动/停止按钮
                                     if daemonRunning {
                                         Button("停止") {
                                             stopDaemon()
@@ -169,37 +190,23 @@ struct SettingsView: View {
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                                 }
+
+                                if app.passwordlessConfigured {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle")
+                                            .foregroundColor(.green)
+                                            .font(.caption2)
+                                        Text("免密授权已配置")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             }
 
                             if let error = daemonError {
                                 Text(error)
                                     .font(.caption2)
                                     .foregroundColor(.red)
-                            }
-                        }
-                    }
-
-                    // MARK: - 权限设置
-                    SettingsSection(title: "权限设置", icon: "key.fill") {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("免密授权")
-                                    .font(.subheadline)
-                                Text("无需密码执行路由命令")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            if app.passwordlessConfigured {
-                                Label("已配置", systemImage: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                                    .font(.caption)
-                            } else {
-                                Button("配置") {
-                                    app.configurePasswordless()
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
                             }
                         }
                     }
@@ -264,7 +271,7 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
         }
         .padding()
-        .frame(width: 300, height: 450)
+        .frame(width: 300, height: 400)
         .onAppear {
             launchAtLogin = checkLaunchStatus()
             checkDaemonStatus()
