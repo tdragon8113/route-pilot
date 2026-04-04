@@ -27,7 +27,11 @@
       "Bash(chmod +x scripts/build-daemon.sh)",
       "Bash(./scripts/build-daemon.sh)",
       "Bash(ls:*)",
-      "Bash(wc -l /Users/tangdinglong/XCodeProjects/RoutePilot/RoutePilot/**/*.swift /Users/tangdinglong/XCodeProjects/RoutePilot/Daemon/*.swift)"
+      "Bash(wc -l /Users/tangdinglong/XCodeProjects/RoutePilot/RoutePilot/**/*.swift /Users/tangdinglong/XCodeProjects/RoutePilot/Daemon/*.swift)",
+      "Bash(curl -s \"http://ip-api.com/json/\")",
+      "Bash(/usr/bin/netstat -rn)",
+      "Bash(pkill -f \"RoutePilot\")",
+      "Bash(log show:*)"
     ]
   }
 }

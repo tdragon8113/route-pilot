@@ -21,11 +21,25 @@ struct ToolsView: View {
 
     // 路由表状态
     @State private var routeEntries: [RouteEntry] = []
-    @State private var filteredRoutes: [RouteEntry] = []
     @State private var routeFilterInterface: String = "全部"
     @State private var routeFilterIP: String = ""
     @State private var availableInterfaces: [String] = ["全部"]
     @State private var isLoadingRoutes = false
+
+    // 计算属性：根据过滤条件返回路由
+    private var displayedRoutes: [RouteEntry] {
+        var result = routeEntries
+
+        if !routeFilterInterface.isEmpty && routeFilterInterface != "全部" {
+            result = result.filter { $0.interface == routeFilterInterface }
+        }
+
+        if !routeFilterIP.isEmpty {
+            result = result.filter { $0.destination.contains(routeFilterIP) || $0.gateway.contains(routeFilterIP) }
+        }
+
+        return result
+    }
 
     // 路由追踪状态
     @State private var tracerouteTarget: String = ""
@@ -41,19 +55,20 @@ struct ToolsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // 标题栏
-            HStack {
-                Button(action: { showTools = false }) {
-                    Image(systemName: "chevron.left")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // 标题栏
+                HStack {
+                    Button(action: { showTools = false }) {
+                        Image(systemName: "chevron.left")
+                    }
+                    .buttonStyle(.borderless)
+
+                    Text("工具")
+                        .font(.headline)
+
+                    Spacer()
                 }
-                .buttonStyle(.borderless)
-
-                Text("工具")
-                    .font(.headline)
-
-                Spacer()
-            }
 
             // 公网 IP 查询
             VStack(alignment: .leading, spacing: 8) {
@@ -227,25 +242,34 @@ struct ToolsView: View {
 
             // 路由表查看
             VStack(alignment: .leading, spacing: 8) {
-                Text("路由表")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-
                 HStack {
-                    Picker("", selection: $routeFilterInterface) {
+                    Text("路由表")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Spacer()
+
+                    Button(action: loadRouteTable) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
+                }
+
+                // 接口过滤
+                HStack {
+                    Picker("接口", selection: $routeFilterInterface) {
                         ForEach(availableInterfaces, id: \.self) { iface in
                             Text(iface).tag(iface)
                         }
                     }
                     .pickerStyle(.menu)
                     .frame(width: 100)
-                    .onChange(of: routeFilterInterface) { _ in filterRoutes() }
 
                     TextField("IP 过滤", text: $routeFilterIP)
                         .textFieldStyle(.roundedBorder)
                         .controlSize(.small)
-                        .frame(width: 100)
-                        .onChange(of: routeFilterIP) { _ in filterRoutes() }
+                        .frame(width: 120)
                 }
 
                 if isLoadingRoutes {
@@ -255,6 +279,12 @@ struct ToolsView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                } else if displayedRoutes.isEmpty {
+                    Text("无匹配的路由")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding()
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 2) {
@@ -274,7 +304,7 @@ struct ToolsView: View {
                             }
                             .foregroundColor(.secondary)
 
-                            ForEach(filteredRoutes.prefix(50)) { route in
+                            ForEach(displayedRoutes.prefix(50)) { route in
                                 HStack {
                                     Text(route.destination)
                                         .font(.caption2)
@@ -384,6 +414,7 @@ struct ToolsView: View {
             )
 
             Spacer()
+            }
         }
     }
 
@@ -521,7 +552,7 @@ struct ToolsView: View {
 
         Task {
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/netstat")
+            process.executableURL = URL(fileURLWithPath: "/usr/sbin/netstat")
             process.arguments = ["-rn"]
 
             let pipe = Pipe()
@@ -538,9 +569,14 @@ struct ToolsView: View {
                 var interfaces: Set<String> = []
 
                 for line in output.components(separatedBy: "\n") {
+                    // 遇到 IPv6 部分就停止
+                    if line.contains("Internet6") { break }
+
                     let parts = line.split(separator: " ", omittingEmptySubsequences: true)
                     guard parts.count >= 4,
-                          !parts[0].hasPrefix("Destination") else { continue }
+                          !parts[0].hasPrefix("Destination"),
+                          !parts[0].hasPrefix("Routing"),
+                          !parts[0].hasPrefix("Internet") else { continue }
 
                     let destination = String(parts[0])
                     let gateway = String(parts[1])
@@ -558,7 +594,6 @@ struct ToolsView: View {
 
                 await MainActor.run {
                     self.routeEntries = entries
-                    self.filteredRoutes = entries
                     self.availableInterfaces = ["全部"] + interfaces.sorted()
                     self.routeFilterInterface = "全部"
                     self.isLoadingRoutes = false
@@ -569,20 +604,6 @@ struct ToolsView: View {
                 }
             }
         }
-    }
-
-    private func filterRoutes() {
-        var result = routeEntries
-
-        if !routeFilterInterface.isEmpty && routeFilterInterface != "全部" {
-            result = result.filter { $0.interface == routeFilterInterface }
-        }
-
-        if !routeFilterIP.isEmpty {
-            result = result.filter { $0.destination.contains(routeFilterIP) || $0.gateway.contains(routeFilterIP) }
-        }
-
-        filteredRoutes = result
     }
 
     private func startTraceroute() {
