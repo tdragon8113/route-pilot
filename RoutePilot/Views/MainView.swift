@@ -15,12 +15,11 @@ struct MainView: View {
     @ObservedObject private var app = AppController.shared
     @State private var isInstalling = false
     @State private var installError: String?
-    @State private var installSuccess = false
+    @State private var showSuccessBanner = false
 
     private func installBackgroundService() {
         isInstalling = true
         installError = nil
-        installSuccess = false
 
         Task {
             let result = DaemonManager.install()
@@ -28,11 +27,7 @@ struct MainView: View {
                 isInstalling = false
                 if result.0 {
                     app.passwordlessConfigured = true
-                    installSuccess = true
-                    // 3秒后自动隐藏成功提示
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        installSuccess = false
-                    }
+                    showSuccessBanner = true
                 } else {
                     installError = result.1 ?? "安装失败"
                 }
@@ -42,25 +37,8 @@ struct MainView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 后台服务启用成功提示
-            if installSuccess {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("后台服务已启用")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                    Spacer()
-                }
-                .padding(8)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.green.opacity(0.1))
-                )
-                Divider()
-            }
             // 后台服务未启用提示（直接一键启用）
-            else if !DaemonManager.isInstalled {
+            if !DaemonManager.isInstalled {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
@@ -224,6 +202,11 @@ struct MainView: View {
                     NSApp.terminate(nil)
                 }
             }
+        }
+        .alert("后台服务已启用", isPresented: $showSuccessBanner) {
+            Button("好的", role: .cancel) { }
+        } message: {
+            Text("VPN 连接时会自动添加路由，退出应用后仍生效")
         }
     }
 }
