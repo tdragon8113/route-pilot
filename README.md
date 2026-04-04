@@ -46,11 +46,10 @@ xcodebuild -project RoutePilot.xcodeproj -scheme RoutePilot -configuration Relea
 ### 快速开始
 
 1. 启动应用 → 菜单栏显示天线图标
-2. 配置免密 → 点击「配置」授权路由操作
-3. 安装守护进程 → 设置 → 后台服务 → 安装
-4. 选择 VPN → 从列表中点击要管理的 VPN
-5. 添加路由 → 输入 `10.0.0.0/8` 或 `github.com`
-6. 连接 VPN → 守护进程自动添加路由
+2. 启用后台服务 → 首页点击「启用」，一次授权完成全部配置
+3. 选择 VPN → 从列表中点击要管理的 VPN
+4. 添加路由 → 输入 `10.0.0.0/8` 或 `github.com`
+5. 连接 VPN → 守护进程自动添加路由
 
 ### 路由规则示例
 
@@ -61,30 +60,14 @@ xcodebuild -project RoutePilot.xcodeproj -scheme RoutePilot -configuration Relea
 | CIDR | `172.16.0.0/12` | Docker/K8s |
 | 域名 | `github.com` | 自动解析 IP |
 
-### 免密授权
-
-路由操作需要管理员权限，推荐配置免密：
-
-**应用内配置**：设置 → 权限设置 → 配置
-
-**手动配置**：
-```bash
-sudo echo "$(whoami) ALL=(ALL) NOPASSWD: /sbin/route" | sudo tee /etc/sudoers.d/autoroute
-sudo chmod 440 /etc/sudoers.d/autoroute
-```
-
 ### 后台服务
 
-安装守护进程后，即使退出应用，VPN 连接时仍会自动添加路由：
+首页点击「启用」即可一键完成免密授权和守护进程安装，之后即使退出应用，VPN 连接时仍会自动添加路由。
 
 **工作原理**：
 - 守护进程通过 SCDynamicStore 监听 VPN 状态变化
 - 事件驱动，无需轮询
 - 与 GUI 共享配置文件
-
-**安装步骤**：
-1. 先配置免密授权
-2. 设置 → 后台服务 → 安装守护进程
 
 **日志位置**：`~/Library/Logs/RoutePilot/daemon.log`
 
