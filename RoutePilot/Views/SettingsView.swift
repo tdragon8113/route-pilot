@@ -88,14 +88,15 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             // 标题栏
             HStack {
-                Text("设置")
-                    .font(.headline)
-                Spacer()
                 Button(action: { showSettings = false }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                    Image(systemName: "chevron.left")
                 }
                 .buttonStyle(.borderless)
+
+                Text("设置")
+                    .font(.headline)
+
+                Spacer()
             }
 
             ScrollView {
