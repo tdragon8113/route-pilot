@@ -85,17 +85,6 @@ struct VPNRowView: View {
 
                 Spacer()
 
-                // 启用开关
-                Toggle("", isOn: Binding(
-                    get: { config.enabled },
-                    set: { newValue in
-                        app.setVPNEnabled(config.name, enabled: newValue)
-                    }
-                ))
-                .labelsHidden()
-                .controlSize(.small)
-                .allowsHitTesting(true)
-
                 // 隐藏按钮（仅禁用时显示）
                 if !config.enabled {
                     Button(action: { app.hideVPN(config.name) }) {
@@ -106,6 +95,17 @@ struct VPNRowView: View {
                     .buttonStyle(.borderless)
                     .help("隐藏此 VPN")
                 }
+
+                // 启用开关
+                Toggle("", isOn: Binding(
+                    get: { config.enabled },
+                    set: { newValue in
+                        app.setVPNEnabled(config.name, enabled: newValue)
+                    }
+                ))
+                .labelsHidden()
+                .controlSize(.small)
+                .allowsHitTesting(true)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 10)
