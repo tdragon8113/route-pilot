@@ -124,10 +124,4 @@ actor RouteService {
         let script = "do shell script \"mkdir -p /etc/sudoers.d && echo '\(content)' | sudo tee /etc/sudoers.d/autoroute && sudo chmod 440 /etc/sudoers.d/autoroute\" with administrator privileges"
         return await ShellRunner.shared.runAppleScript(script)
     }
-
-    /// 移除免密授权
-    func removePasswordless() async -> Bool {
-        let script = "do shell script \"sudo rm -f /etc/sudoers.d/autoroute\" with administrator privileges"
-        return await ShellRunner.shared.runAppleScript(script)
-    }
 }

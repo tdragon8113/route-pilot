@@ -353,24 +353,6 @@ class AppController: ObservableObject {
         }
     }
 
-    func removePasswordless() {
-        isConfiguring = true
-        log("正在移除免密授权...")
-
-        Task {
-            let success = await RouteService.shared.removePasswordless()
-
-            isConfiguring = false
-            if success {
-                passwordlessConfigured = false
-                saveConfig()
-                log("已移除免密授权", level: .success)
-            } else {
-                log("移除免密授权失败", level: .error)
-            }
-        }
-    }
-
     // MARK: - 日志
     private func log(_ message: String, level: LogEntry.LogLevel = .info, vpnName: String? = nil) {
         let entry = LogEntry(time: Date(), vpnName: vpnName, message: message, level: level)
