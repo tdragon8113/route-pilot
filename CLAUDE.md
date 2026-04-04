@@ -130,15 +130,38 @@ launchctl unload ~/Library/LaunchAgents/com.tangda.RoutePilotDaemon.plist
 
 ## 发布流程
 
+**重要：必须先更新 CHANGELOG，再创建 tag，否则 Release 页面不会显示变更日志。**
+
 ```bash
-# 创建版本标签触发 CI 和 Release
-git tag v1.2.0
-git push origin v1.2.0
+# 1. 更新 CHANGELOG.md，添加新版本的变更记录
+
+# 2. 提交 CHANGELOG 更新
+git add CHANGELOG.md
+git commit -m "docs: 更新 CHANGELOG v1.x.x"
+git push origin main
+
+# 3. 创建版本标签并推送（触发 CI 和 Release）
+git tag v1.x.x
+git push origin main --tags
 ```
 
 GitHub Actions 工作流：
 - **CI** (`.github/workflows/ci.yml`) - 构建 daemon + 验证构建
-- **Release** (`.github/workflows/release.yml`) - 打包发布 DMG
+- **Release** (`.github/workflows/release.yml`) - 打包发布 DMG，自动提取 CHANGELOG 对应版本内容
+
+如果发布出错需要重新发布：
+```bash
+# 删除本地和远程 tag
+git tag -d v1.x.x
+git push origin :refs/tags/v1.x.x
+
+# 删除 GitHub Release（如果已创建）
+gh release delete v1.x.x -y
+
+# 修正后重新创建 tag
+git tag v1.x.x
+git push origin main --tags
+```
 
 ## 注意事项
 
