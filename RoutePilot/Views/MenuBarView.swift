@@ -36,6 +36,7 @@ struct MenuBarView: View {
         }
         .padding()
         .frame(width: 280)
+        .frame(minHeight: 450)
         .onAppear {
             app.refreshSystemVPNs()
         }
