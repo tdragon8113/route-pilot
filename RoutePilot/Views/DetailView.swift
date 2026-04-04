@@ -104,6 +104,12 @@ struct DetailView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(nsColor: .controlBackgroundColor))
         )
+        .onAppear {
+            // 进入时自动获取路由
+            if let iface = vpnStatus?.interface {
+                app.fetchCurrentRoutes(interface: iface)
+            }
+        }
     }
 
     @ViewBuilder
