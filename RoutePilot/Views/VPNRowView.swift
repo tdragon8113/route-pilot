@@ -85,15 +85,6 @@ struct VPNRowView: View {
 
                 Spacer()
 
-                // 隐藏按钮
-                Button(action: { app.hideVPN(config.name) }) {
-                    Image(systemName: "eye.slash")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.borderless)
-                .help("隐藏此 VPN")
-
                 // 启用开关
                 Toggle("", isOn: Binding(
                     get: { config.enabled },
@@ -104,6 +95,17 @@ struct VPNRowView: View {
                 .labelsHidden()
                 .controlSize(.small)
                 .allowsHitTesting(true)
+
+                // 隐藏按钮（仅禁用时显示）
+                if !config.enabled {
+                    Button(action: { app.hideVPN(config.name) }) {
+                        Image(systemName: "eye.slash")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .help("隐藏此 VPN")
+                }
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 10)
