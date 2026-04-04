@@ -251,8 +251,6 @@ struct SettingsView: View {
                 }
             }
         }
-        .padding()
-        .frame(width: 300, height: 400)
         .onAppear {
             launchAtLogin = checkLaunchStatus()
             checkDaemonStatus()
