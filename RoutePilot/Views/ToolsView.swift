@@ -22,9 +22,9 @@ struct ToolsView: View {
     // 路由表状态
     @State private var routeEntries: [RouteEntry] = []
     @State private var filteredRoutes: [RouteEntry] = []
-    @State private var routeFilterInterface: String = ""
+    @State private var routeFilterInterface: String = "全部"
     @State private var routeFilterIP: String = ""
-    @State private var availableInterfaces: [String] = []
+    @State private var availableInterfaces: [String] = ["全部"]
     @State private var isLoadingRoutes = false
 
     // 路由追踪状态
@@ -232,17 +232,19 @@ struct ToolsView: View {
                     .fontWeight(.medium)
 
                 HStack {
-                    Picker("接口", selection: $routeFilterInterface) {
+                    Picker("", selection: $routeFilterInterface) {
                         ForEach(availableInterfaces, id: \.self) { iface in
                             Text(iface).tag(iface)
                         }
                     }
-                    .frame(width: 80)
+                    .pickerStyle(.menu)
+                    .frame(width: 100)
                     .onChange(of: routeFilterInterface) { _ in filterRoutes() }
 
                     TextField("IP 过滤", text: $routeFilterIP)
                         .textFieldStyle(.roundedBorder)
                         .controlSize(.small)
+                        .frame(width: 100)
                         .onChange(of: routeFilterIP) { _ in filterRoutes() }
                 }
 
@@ -558,6 +560,7 @@ struct ToolsView: View {
                     self.routeEntries = entries
                     self.filteredRoutes = entries
                     self.availableInterfaces = ["全部"] + interfaces.sorted()
+                    self.routeFilterInterface = "全部"
                     self.isLoadingRoutes = false
                 }
             } catch {
