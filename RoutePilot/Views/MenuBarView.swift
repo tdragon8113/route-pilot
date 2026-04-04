@@ -12,10 +12,13 @@ struct MenuBarView: View {
     @State private var newRoute = ""
     @State private var showDetailView: Bool = false
     @State private var detailInitialTab: Int = 0
+    @State private var showSettings: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if showDetailView {
+            if showSettings {
+                SettingsView(showSettings: $showSettings)
+            } else if showDetailView {
                 DetailView(
                     showDetailView: $showDetailView,
                     vpnName: selectedVPN ?? app.activeVPNs.first?.name ?? app.vpnConfigs.first?.name ?? "",
@@ -26,7 +29,8 @@ struct MenuBarView: View {
                     selectedVPN: $selectedVPN,
                     newRoute: $newRoute,
                     showDetailView: $showDetailView,
-                    detailInitialTab: $detailInitialTab
+                    detailInitialTab: $detailInitialTab,
+                    showSettings: $showSettings
                 )
             }
         }

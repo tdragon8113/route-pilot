@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Combine
 
 /// VPN 快速配置组件：路由管理、操作按钮
 struct VPNQuickConfigView: View {
@@ -98,18 +99,6 @@ struct VPNQuickConfigView: View {
                     .font(.caption)
                     .buttonStyle(.borderless)
                 }
-
-                Toggle("", isOn: Binding(
-                    get: { config?.enabled ?? true },
-                    set: { newValue in
-                        if let index = app.vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-                            app.vpnConfigs[index].enabled = newValue
-                            app.saveConfig()
-                        }
-                    }
-                ))
-                .labelsHidden()
-                .controlSize(.small)
             }
 
             if let routes = config?.routes, !routes.isEmpty {
@@ -124,7 +113,6 @@ struct VPNQuickConfigView: View {
                             dragProgress = progress
                         },
                         onDragEnded: {
-                            // 执行实际的移动
                             if let startIdx = routes.firstIndex(where: { $0.id == draggingId }) {
                                 let targetOffset = Int(round(dragProgress))
                                 let targetIdx = startIdx + targetOffset
@@ -150,7 +138,7 @@ struct VPNQuickConfigView: View {
             // 添加新路由
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    TextField("目标地址 (如 10.0.0.0/8)", text: $newRoute)
+                    TextField("目标地址 (如 10.0.0.0/8 或 github.com)", text: $newRoute)
                         .textFieldStyle(.roundedBorder)
                         .controlSize(.small)
 

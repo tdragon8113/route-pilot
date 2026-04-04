@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-/// 详情视图：当前路由表和完整日志
+/// 详情视图：当前路由表、操作日志
 struct DetailView: View {
     @Binding var showDetailView: Bool
     let vpnName: String

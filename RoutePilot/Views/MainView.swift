@@ -11,6 +11,7 @@ struct MainView: View {
     @Binding var newRoute: String
     @Binding var showDetailView: Bool
     @Binding var detailInitialTab: Int
+    @Binding var showSettings: Bool
     @ObservedObject private var app = AppController.shared
 
     var body: some View {
@@ -38,7 +39,7 @@ struct MainView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("\(app.vpnConfigs.count) 个")
+                Text("\(app.vpnConfigs.filter { $0.enabled && !$0.hidden }.count) 个")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -56,7 +57,7 @@ struct MainView: View {
                 .padding(.vertical, 12)
             } else {
                 VStack(spacing: 6) {
-                    ForEach(app.vpnConfigs) { config in
+                    ForEach(app.vpnConfigs.filter { !$0.hidden }) { config in
                         VPNRowView(
                             config: config,
                             isSelected: selectedVPN == config.name,
@@ -78,7 +79,9 @@ struct MainView: View {
                     detailInitialTab: $detailInitialTab
                 )
                 .id(vpnName)
-            } else if let activeVPN = app.activeVPNs.first {
+            } else if let activeVPN = app.activeVPNs.first(where: { vpn in
+                app.vpnConfigs.contains { $0.enabled && !$0.hidden && $0.name == vpn.name }
+            }) {
                 VPNQuickConfigView(
                     vpnName: activeVPN.name,
                     newRoute: $newRoute,
@@ -86,7 +89,7 @@ struct MainView: View {
                     detailInitialTab: $detailInitialTab
                 )
                 .id(activeVPN.name)
-            } else if let firstConfig = app.vpnConfigs.first {
+            } else if let firstConfig = app.vpnConfigs.first(where: { $0.enabled && !$0.hidden }) {
                 VPNQuickConfigView(
                     vpnName: firstConfig.name,
                     newRoute: $newRoute,
@@ -144,8 +147,18 @@ struct MainView: View {
 
             Divider()
 
-            Button("退出") {
-                NSApp.terminate(nil)
+            HStack {
+                Button(action: { showSettings = true }) {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+                .help("设置")
+
+                Spacer()
+
+                Button("退出") {
+                    NSApp.terminate(nil)
+                }
             }
         }
     }

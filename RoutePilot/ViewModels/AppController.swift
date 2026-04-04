@@ -37,15 +37,20 @@ class AppController: ObservableObject {
     private let configFile = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         .appendingPathComponent("RoutePilot/config.json")
 
-    private var previousVPNNames: Set<String> = []
-    private var isCheckingVPN = false
-
     private init() {
         loadConfig()
         Task { await loadLogs() }
         checkPasswordless()
         refreshSystemVPNs()
         startVPNMonitoring()
+    }
+
+    // MARK: - 辅助方法：更新 VPN 配置
+    private func updateVPNConfig(_ name: String, transform: (inout VPNConfig) -> Void) {
+        guard let index = vpnConfigs.firstIndex(where: { $0.name == name }) else { return }
+        transform(&vpnConfigs[index])
+        objectWillChange.send()
+        saveConfig()
     }
 
     // MARK: - 系统VPN列表
@@ -71,91 +76,61 @@ class AppController: ObservableObject {
     // MARK: - VPN 监控
     private func startVPNMonitoring() {
         Task {
-            await VPNService.shared.startMonitoring { [weak self] vpnName in
-                guard let self = self else { return }
-                self.handleVPNStatusChange(vpnName: vpnName)
-            }
-        }
-        NSLog("[RoutePilot] VPN 监控已启动")
+            await VPNMonitor.shared.startMonitoring()
 
-        // 首次检查
-        checkVPNStatus()
-    }
-
-    private func handleVPNStatusChange(vpnName: String?) {
-        guard let vpnName = vpnName else {
-            // 接口变化但无法确定 VPN 名称，执行完整检查
-            checkVPNStatus()
-            return
-        }
-
-        NSLog("[RoutePilot] VPN 状态变化: \(vpnName)")
-
-        // 更新 VPN 状态
-        Task {
-            let result = await VPNService.shared.getVPNStatusFromStore()
-            self.activeVPNs = result
-            self.vpnConnected = !result.isEmpty
-
-            // 更新 previousVPNNames
-            let currentNames = Set(result.map { $0.name })
-            let wasConnected = self.previousVPNNames.contains(vpnName)
-            let nowConnected = currentNames.contains(vpnName)
-
-            self.previousVPNNames = currentNames
-
-            // 处理连接/断开
-            if nowConnected && !wasConnected {
-                self.log("检测到 VPN 连接: \(vpnName)", level: .info, vpnName: vpnName)
-                self.autoAddRoutes(for: vpnName)
-            } else if !nowConnected && wasConnected {
-                self.log("检测到 VPN 断开: \(vpnName)", level: .info, vpnName: vpnName)
-            }
+            // 设置回调
+            await VPNMonitor.shared.setCallbacks(
+                onConnected: { [weak self] vpnName in
+                    await MainActor.run {
+                        self?.handleVPNConnected(vpnName)
+                    }
+                },
+                onDisconnected: { [weak self] vpnName in
+                    await MainActor.run {
+                        self?.handleVPDisconnected(vpnName)
+                    }
+                },
+                onStatusChanged: { [weak self] statusList in
+                    await MainActor.run {
+                        self?.activeVPNs = statusList
+                        self?.updateMenuBarStatus()
+                    }
+                }
+            )
         }
     }
 
-    private func checkVPNStatus() {
-        guard !isCheckingVPN else {
-            NSLog("[RoutePilot] checkVPNStatus 跳过：正在检查中")
+    private func handleVPNConnected(_ vpnName: String) {
+        guard let config = vpnConfigs.first(where: { $0.name == vpnName }),
+              config.enabled else {
+            log("VPN \(vpnName) 未启用，跳过自动添加路由", level: .info, vpnName: vpnName)
             return
         }
-        isCheckingVPN = true
-        NSLog("[RoutePilot] checkVPNStatus 开始")
+        log("检测到 VPN 连接: \(vpnName)", level: .info, vpnName: vpnName)
+        autoAddRoutes(for: vpnName)
+    }
 
-        Task {
-            // 使用 SCDynamicStore 获取 VPN 状态
-            let result = await VPNService.shared.getVPNStatusFromStore()
-
-            let previousNames = self.previousVPNNames
-            let currentNames = Set(result.map { $0.name })
-
-            NSLog("[RoutePilot] 之前连接: \(previousNames), 当前连接: \(currentNames)")
-
-            self.activeVPNs = result
-            self.vpnConnected = !result.isEmpty
-
-            // 检测新连接的 VPN
-            let newlyConnected = currentNames.subtracting(previousNames)
-            let isFirstCheck = previousNames.isEmpty
-            let vpnToProcess = isFirstCheck ? currentNames : newlyConnected
-
-            NSLog("[RoutePilot] 新连接的 VPN: \(newlyConnected), 首次检查: \(isFirstCheck)")
-
-            for vpnName in vpnToProcess {
-                self.log("检测到 VPN 连接: \(vpnName)", level: .info, vpnName: vpnName)
-                self.autoAddRoutes(for: vpnName)
-            }
-
-            self.previousVPNNames = currentNames
-            self.isCheckingVPN = false
-        }
+    private func handleVPDisconnected(_ vpnName: String) {
+        log("检测到 VPN 断开: \(vpnName)", level: .info, vpnName: vpnName)
     }
 
     // MARK: - 路由配置
     func addRoute(_ destination: String, note: String? = nil, to vpnName: String) {
+        // 判断路由类型
+        let type: RouteType
+        if destination.contains("/") {
+            type = .cidr
+        } else if DNSService.isDomain(destination) {
+            type = .domain
+            log("检测到域名类型路由: \(destination)", level: .info, vpnName: vpnName)
+        } else {
+            // 可能是单 IP，当作 CIDR 处理
+            type = .cidr
+        }
+
         log("添加路由规则: \(destination) -> \(vpnName)", vpnName: vpnName)
         if let index = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-            vpnConfigs[index].routes.append(RouteItem(destination: destination, note: note))
+            vpnConfigs[index].routes.append(RouteItem(destination: destination, type: type, note: note))
             saveConfig()
             log("路由规则已保存", level: .success, vpnName: vpnName)
         } else {
@@ -163,27 +138,67 @@ class AppController: ObservableObject {
         }
     }
 
-    func removeRoute(_ route: RouteItem, from vpnName: String) {
-        if let index = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-            vpnConfigs[index].routes.removeAll { $0.id == route.id }
-            saveConfig()
+    // MARK: - VPN 显示控制
+    /// 设置 VPN 启用状态
+    func setVPNEnabled(_ vpnName: String, enabled: Bool) {
+        updateVPNConfig(vpnName) { $0.enabled = enabled }
+        updateMenuBarStatus()
+    }
+
+    /// 更新菜单栏图标状态
+    private func updateMenuBarStatus() {
+        // 只统计已启用的 VPN 连接状态
+        vpnConnected = activeVPNs.contains { vpn in
+            vpnConfigs.first { $0.name == vpn.name }?.enabled ?? false
         }
     }
 
+    /// 隐藏 VPN
+    func hideVPN(_ vpnName: String) {
+        updateVPNConfig(vpnName) { $0.hidden = true }
+    }
+
+    /// 显示单个隐藏的 VPN
+    func showVPN(_ vpnName: String) {
+        updateVPNConfig(vpnName) { $0.hidden = false }
+    }
+
+    /// 显示所有隐藏的 VPN
+    func showAllHiddenVPNs() {
+        for i in vpnConfigs.indices {
+            vpnConfigs[i].hidden = false
+        }
+        objectWillChange.send()
+        saveConfig()
+        updateMenuBarStatus()
+    }
+
+    /// 是否有隐藏的 VPN
+    var hasHiddenVPNs: Bool {
+        vpnConfigs.contains { $0.hidden }
+    }
+
+    /// 获取可见的 VPN 配置列表
+    var visibleVPNConfigs: [VPNConfig] {
+        vpnConfigs.filter { !$0.hidden }
+    }
+
+    func removeRoute(_ route: RouteItem, from vpnName: String) {
+        updateVPNConfig(vpnName) { $0.routes.removeAll { $0.id == route.id } }
+    }
+
     func toggleRoute(_ route: RouteItem, in vpnName: String, enabled: Bool) {
-        if let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-            if let routeIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }) {
-                vpnConfigs[vpnIndex].routes[routeIndex].enabled = enabled
-                saveConfig()
+        updateVPNConfig(vpnName) { config in
+            if let routeIndex = config.routes.firstIndex(where: { $0.id == route.id }) {
+                config.routes[routeIndex].enabled = enabled
             }
         }
     }
 
     func updateNote(_ note: String?, for route: RouteItem, in vpnName: String) {
-        if let vpnIndex = vpnConfigs.firstIndex(where: { $0.name == vpnName }) {
-            if let routeIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }) {
-                vpnConfigs[vpnIndex].routes[routeIndex].note = note
-                saveConfig()
+        updateVPNConfig(vpnName) { config in
+            if let routeIndex = config.routes.firstIndex(where: { $0.id == route.id }) {
+                config.routes[routeIndex].note = note
             }
         }
     }
@@ -213,15 +228,11 @@ class AppController: ObservableObject {
               let fromIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == route.id }),
               let toIndex = vpnConfigs[vpnIndex].routes.firstIndex(where: { $0.id == target.id }) else { return }
 
-        // Create a mutable copy to ensure @Published triggers
         var config = vpnConfigs[vpnIndex]
         let routeToMove = config.routes.remove(at: fromIndex)
-
-        // Adjust target index (if moving from earlier to later position)
         let adjustedToIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
-
         config.routes.insert(routeToMove, at: adjustedToIndex)
-        vpnConfigs[vpnIndex] = config  // Reassign to trigger @Published
+        vpnConfigs[vpnIndex] = config
         saveConfig()
     }
 
@@ -233,11 +244,8 @@ class AppController: ObservableObject {
 
         var config = vpnConfigs[vpnIndex]
         let routeToMove = config.routes.remove(at: fromIndex)
-
-        // Adjust insert index
-        let insertIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
+        let insertIndex = fromIndex < toIndex ? toIndex : toIndex
         config.routes.insert(routeToMove, at: insertIndex)
-
         vpnConfigs[vpnIndex] = config
         saveConfig()
     }
