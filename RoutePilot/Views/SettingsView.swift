@@ -249,13 +249,6 @@ struct SettingsView: View {
                     }
                 }
             }
-
-            Divider()
-
-            Button("关闭") {
-                showSettings = false
-            }
-            .frame(maxWidth: .infinity)
         }
         .padding()
         .frame(width: 300, height: 400)
