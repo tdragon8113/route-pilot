@@ -8,6 +8,17 @@
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>需要执行路由配置命令</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>ip-api.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>com.apple.security.app-sandbox</key>
 	<false/>
 </dict>
