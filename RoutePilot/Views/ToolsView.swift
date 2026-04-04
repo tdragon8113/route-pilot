@@ -14,6 +14,11 @@ struct ToolsView: View {
     @State private var debugError: String?
     @State private var isDebugging = false
 
+    // 公网 IP 查询状态
+    @State private var publicIPInfo: PublicIPInfo?
+    @State private var isQueryingIP = false
+    @State private var ipQueryError: String?
+
     struct DebugResult {
         let resolvedIP: String?
         let interface: String
@@ -34,6 +39,77 @@ struct ToolsView: View {
 
                 Spacer()
             }
+
+            // 公网 IP 查询
+            VStack(alignment: .leading, spacing: 8) {
+                Text("公网 IP 查询")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("查询当前公网 IP 及地理位置")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if isQueryingIP {
+                    HStack {
+                        ProgressView().controlSize(.small)
+                        Text("查询中...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else if let info = publicIPInfo {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("IP:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(info.query)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        HStack {
+                            Text("位置:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(info.country), \(info.city)")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        HStack {
+                            Text("运营商:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(info.isp)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(nsColor: .controlBackgroundColor))
+                    )
+                }
+
+                if let error = ipQueryError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+
+                Button(isQueryingIP ? "查询中..." : "查询") {
+                    queryPublicIP()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .disabled(isQueryingIP)
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
 
             // 路由查询
             VStack(alignment: .leading, spacing: 8) {
@@ -234,6 +310,34 @@ struct ToolsView: View {
                 await MainActor.run {
                     isDebugging = false
                     debugError = "查询失败: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    private func queryPublicIP() {
+        isQueryingIP = true
+        ipQueryError = nil
+
+        guard let url = URL(string: "http://ip-api.com/json/") else { return }
+
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let info = try JSONDecoder().decode(PublicIPInfo.self, from: data)
+
+                await MainActor.run {
+                    isQueryingIP = false
+                    if info.isSuccess {
+                        publicIPInfo = info
+                    } else {
+                        ipQueryError = "查询失败"
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isQueryingIP = false
+                    ipQueryError = "查询失败，请检查网络连接"
                 }
             }
         }
