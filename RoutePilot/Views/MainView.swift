@@ -15,7 +15,6 @@ struct MainView: View {
     @ObservedObject private var app = AppController.shared
     @State private var isInstalling = false
     @State private var installError: String?
-    @State private var showSuccessBanner = false
 
     private func installBackgroundService() {
         isInstalling = true
@@ -27,7 +26,6 @@ struct MainView: View {
                 isInstalling = false
                 if result.0 {
                     app.passwordlessConfigured = true
-                    showSuccessBanner = true
                 } else {
                     installError = result.1 ?? "安装失败"
                 }
@@ -202,11 +200,6 @@ struct MainView: View {
                     NSApp.terminate(nil)
                 }
             }
-        }
-        .alert("后台服务已启用", isPresented: $showSuccessBanner) {
-            Button("好的", role: .cancel) { }
-        } message: {
-            Text("VPN 连接时会自动添加路由，退出应用后仍生效")
         }
     }
 }
