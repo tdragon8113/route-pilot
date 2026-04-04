@@ -19,6 +19,14 @@ struct ToolsView: View {
     @State private var isQueryingIP = false
     @State private var ipQueryError: String?
 
+    // 路由表状态
+    @State private var routeEntries: [RouteEntry] = []
+    @State private var filteredRoutes: [RouteEntry] = []
+    @State private var routeFilterInterface: String = ""
+    @State private var routeFilterIP: String = ""
+    @State private var availableInterfaces: [String] = []
+    @State private var isLoadingRoutes = false
+
     struct DebugResult {
         let resolvedIP: String?
         let interface: String
@@ -210,6 +218,81 @@ struct ToolsView: View {
                     .fill(Color(nsColor: .controlBackgroundColor))
             )
 
+            // 路由表查看
+            VStack(alignment: .leading, spacing: 8) {
+                Text("路由表")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                HStack {
+                    Picker("接口", selection: $routeFilterInterface) {
+                        ForEach(availableInterfaces, id: \.self) { iface in
+                            Text(iface).tag(iface)
+                        }
+                    }
+                    .frame(width: 80)
+                    .onChange(of: routeFilterInterface) { _ in filterRoutes() }
+
+                    TextField("IP 过滤", text: $routeFilterIP)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.small)
+                        .onChange(of: routeFilterIP) { _ in filterRoutes() }
+                }
+
+                if isLoadingRoutes {
+                    HStack {
+                        ProgressView().controlSize(.small)
+                        Text("加载中...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                Text("目标")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .frame(width: 100, alignment: .leading)
+                                Text("网关")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .frame(width: 80, alignment: .leading)
+                                Text("接口")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .leading)
+                            }
+                            .foregroundColor(.secondary)
+
+                            ForEach(filteredRoutes.prefix(50)) { route in
+                                HStack {
+                                    Text(route.destination)
+                                        .font(.caption2)
+                                        .frame(width: 100, alignment: .leading)
+                                    Text(route.gateway)
+                                        .font(.caption2)
+                                        .frame(width: 80, alignment: .leading)
+                                    Text(route.interface)
+                                        .font(.caption2)
+                                        .foregroundColor(.blue)
+                                        .frame(width: 50, alignment: .leading)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 150)
+                }
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+            .onAppear {
+                loadRouteTable()
+            }
+
             Spacer()
         }
     }
@@ -341,5 +424,73 @@ struct ToolsView: View {
                 }
             }
         }
+    }
+
+    private func loadRouteTable() {
+        isLoadingRoutes = true
+
+        Task {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/netstat")
+            process.arguments = ["-rn"]
+
+            let pipe = Pipe()
+            process.standardOutput = pipe
+
+            do {
+                try process.run()
+                process.waitUntilExit()
+
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(data: data, encoding: .utf8) ?? ""
+
+                var entries: [RouteEntry] = []
+                var interfaces: Set<String> = []
+
+                for line in output.components(separatedBy: "\n") {
+                    let parts = line.split(separator: " ", omittingEmptySubsequences: true)
+                    guard parts.count >= 4,
+                          !parts[0].hasPrefix("Destination") else { continue }
+
+                    let destination = String(parts[0])
+                    let gateway = String(parts[1])
+                    let flags = String(parts[2])
+                    let interface = String(parts[3])
+
+                    entries.append(RouteEntry(
+                        destination: destination,
+                        gateway: gateway,
+                        flags: flags,
+                        interface: interface
+                    ))
+                    interfaces.insert(interface)
+                }
+
+                await MainActor.run {
+                    self.routeEntries = entries
+                    self.filteredRoutes = entries
+                    self.availableInterfaces = ["全部"] + interfaces.sorted()
+                    self.isLoadingRoutes = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoadingRoutes = false
+                }
+            }
+        }
+    }
+
+    private func filterRoutes() {
+        var result = routeEntries
+
+        if !routeFilterInterface.isEmpty && routeFilterInterface != "全部" {
+            result = result.filter { $0.interface == routeFilterInterface }
+        }
+
+        if !routeFilterIP.isEmpty {
+            result = result.filter { $0.destination.contains(routeFilterIP) || $0.gateway.contains(routeFilterIP) }
+        }
+
+        filteredRoutes = result
     }
 }
