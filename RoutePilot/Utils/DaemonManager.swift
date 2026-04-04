@@ -126,17 +126,11 @@ enum DaemonManager {
         return (true, nil)
     }
 
-    /// 启动守护进程
-    static func start() -> (Bool, String?) {
-        let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
-
-        guard FileManager.default.fileExists(atPath: plistPath.path) else {
-            return (false, "LaunchAgent plist 不存在")
-        }
-
+    /// 停止守护进程
+    static func stop() -> (Bool, String?) {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-        task.arguments = ["load", plistPath.path]
+        task.arguments = ["stop", daemonLabel]
 
         do {
             try task.run()
@@ -147,13 +141,11 @@ enum DaemonManager {
         }
     }
 
-    /// 停止守护进程
-    static func stop() -> (Bool, String?) {
-        let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
-
+    /// 启动守护进程
+    static func start() -> (Bool, String?) {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-        task.arguments = ["unload", plistPath.path]
+        task.arguments = ["start", daemonLabel]
 
         do {
             try task.run()
