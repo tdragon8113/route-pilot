@@ -100,27 +100,16 @@ enum DaemonManager {
     static func uninstall() -> (Bool, String?) {
         let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
 
-        // 1. 卸载 LaunchAgent
-        if FileManager.default.fileExists(atPath: plistPath.path) {
-            let unloadTask = Process()
-            unloadTask.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-            unloadTask.arguments = ["unload", plistPath.path]
+        // 一次性执行所有操作（需要管理员权限）
+        let uninstallScript = """
+        launchctl unload '\(plistPath.path)' 2>/dev/null || true && \
+        rm -f '\(plistPath.path)' '\(daemonBinaryPath)' /etc/sudoers.d/autoroute
+        """
 
-            do {
-                try unloadTask.run()
-                unloadTask.waitUntilExit()
-            } catch {}
-        }
+        let result = runWithAdminPrivileges(uninstallScript)
 
-        // 2. 删除 plist
-        try? FileManager.default.removeItem(at: plistPath)
-
-        // 3. 删除守护进程可执行文件和免密授权配置（需要管理员权限）
-        let removeScript = "rm -f '\(daemonBinaryPath)' /etc/sudoers.d/autoroute"
-        let removeResult = runWithAdminPrivileges(removeScript)
-
-        if !removeResult.success {
-            return (false, "删除文件失败: \(removeResult.error ?? "未知错误")")
+        if !result.success {
+            return (false, "卸载失败: \(result.error ?? "未知错误")")
         }
 
         return (true, nil)
