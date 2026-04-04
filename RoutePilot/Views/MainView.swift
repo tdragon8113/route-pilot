@@ -16,20 +16,20 @@ struct MainView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 守护进程未安装提示（优先级最高）
-            if !DaemonManager.isInstalled && app.passwordlessConfigured {
+            // 后台服务未启用提示（统一提示，引导到设置页面一键启用）
+            if !DaemonManager.isInstalled {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("自动路由未启用")
+                        Text("后台服务未启用")
                             .font(.caption)
-                        Text("请安装守护进程")
+                        Text("VPN 连接时无法自动添加路由")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                     Spacer()
-                    Button("安装") {
+                    Button("启用") {
                         showSettings = true
                     }
                     .buttonStyle(.borderedProminent)
@@ -40,22 +40,6 @@ struct MainView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color.orange.opacity(0.1))
                 )
-                Divider()
-            }
-            // 免密状态提示
-            else if !app.passwordlessConfigured {
-                HStack {
-                    Image(systemName: "exclamationmark.triangle")
-                        .foregroundColor(.orange)
-                    Text("建议配置免密授权")
-                        .font(.caption)
-                    Spacer()
-                    Button("配置") {
-                        app.configurePasswordless()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                }
                 Divider()
             }
 
