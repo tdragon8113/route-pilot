@@ -239,7 +239,7 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
 
-                        Link(destination: URL(string: "https://github.com/tangda1999/RoutePilot")!) {
+                        Link(destination: URL(string: "https://github.com/tdragon8113/route-pilot")!) {
                             HStack {
                                 Image(systemName: "link")
                                 Text("GitHub")
