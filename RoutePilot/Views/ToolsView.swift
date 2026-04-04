@@ -257,20 +257,25 @@ struct ToolsView: View {
                 }
 
                 // 接口过滤
-                HStack {
-                    Picker("接口", selection: $routeFilterInterface) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
                         ForEach(availableInterfaces, id: \.self) { iface in
-                            Text(iface).tag(iface)
+                            if routeFilterInterface == iface {
+                                Button(iface) { routeFilterInterface = iface }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.small)
+                            } else {
+                                Button(iface) { routeFilterInterface = iface }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                            }
                         }
                     }
-                    .pickerStyle(.menu)
-                    .frame(width: 100)
-
-                    TextField("IP 过滤", text: $routeFilterIP)
-                        .textFieldStyle(.roundedBorder)
-                        .controlSize(.small)
-                        .frame(width: 120)
                 }
+
+                TextField("IP 过滤", text: $routeFilterIP)
+                    .textFieldStyle(.roundedBorder)
+                    .controlSize(.small)
 
                 if isLoadingRoutes {
                     HStack {
@@ -614,7 +619,7 @@ struct ToolsView: View {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/traceroute")
-        process.arguments = [tracerouteTarget]
+        process.arguments = ["-w", "2", "-q", "1", "-m", "30", tracerouteTarget]
 
         let pipe = Pipe()
         process.standardOutput = pipe
@@ -661,17 +666,20 @@ struct ToolsView: View {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
 
-        // 匹配格式: "1  192.168.1.1 (192.168.1.1)  1.234 ms"
-        // 或: "2  * * *"
+        // 跳过警告和标题行
+        if trimmed.hasPrefix("traceroute") { return nil }
+
         let parts = trimmed.split(separator: " ", omittingEmptySubsequences: true)
         guard let hopNum = Int(parts[0]) else { return nil }
 
-        if parts[1] == "*" {
+        // 检查是否超时：格式 "1  *" 或 "1 * * *"
+        if parts.count > 1 && String(parts[1]) == "*" {
             return TracerouteHop(hopNumber: hopNum, ip: nil, hostname: nil, time: nil)
         }
 
+        guard parts.count > 1 else { return nil }
+
         let ip = String(parts[1])
-        var hostname: String? = nil
         var time: String? = nil
 
         // 查找时间
@@ -682,6 +690,6 @@ struct ToolsView: View {
             }
         }
 
-        return TracerouteHop(hopNumber: hopNum, ip: ip, hostname: hostname, time: time)
+        return TracerouteHop(hopNumber: hopNum, ip: ip, hostname: nil, time: time)
     }
 }
