@@ -42,8 +42,7 @@ actor VPNMonitor {
         }
         NSLog("[RoutePilot] VPN 监控已启动")
 
-        // 首次检查（延迟一下让 SCDynamicStore 准备好）
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+        // 首次检查
         await checkStatus(enabledVPNNames: nil)
     }
 

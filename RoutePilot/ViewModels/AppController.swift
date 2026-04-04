@@ -76,9 +76,7 @@ class AppController: ObservableObject {
     // MARK: - VPN 监控
     private func startVPNMonitoring() {
         Task {
-            await VPNMonitor.shared.startMonitoring()
-
-            // 设置回调
+            // 先设置回调，再启动监控
             await VPNMonitor.shared.setCallbacks(
                 onConnected: { [weak self] vpnName in
                     await MainActor.run {
@@ -97,6 +95,9 @@ class AppController: ObservableObject {
                     }
                 }
             )
+
+            // 启动监控（内部会首次检查状态并触发回调）
+            await VPNMonitor.shared.startMonitoring()
         }
     }
 
