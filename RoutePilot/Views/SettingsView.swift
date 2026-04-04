@@ -72,6 +72,8 @@ struct SettingsView: View {
         let result = DaemonManager.uninstall()
         if result.0 {
             checkDaemonStatus()
+            // 卸载时同时清理了免密授权配置
+            app.passwordlessConfigured = false
         } else {
             daemonError = result.1 ?? "卸载失败"
         }

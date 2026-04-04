@@ -96,7 +96,7 @@ enum DaemonManager {
         return (true, nil)
     }
 
-    /// 卸载守护进程
+    /// 卸载守护进程（同时清理免密授权配置）
     static func uninstall() -> (Bool, String?) {
         let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
 
@@ -115,12 +115,12 @@ enum DaemonManager {
         // 2. 删除 plist
         try? FileManager.default.removeItem(at: plistPath)
 
-        // 3. 删除可执行文件（需要管理员权限）
-        let removeScript = "rm -f '\(daemonBinaryPath)'"
+        // 3. 删除守护进程可执行文件和免密授权配置（需要管理员权限）
+        let removeScript = "rm -f '\(daemonBinaryPath)' /etc/sudoers.d/autoroute"
         let removeResult = runWithAdminPrivileges(removeScript)
 
         if !removeResult.success {
-            return (false, "删除守护进程文件失败: \(removeResult.error ?? "未知错误")")
+            return (false, "删除文件失败: \(removeResult.error ?? "未知错误")")
         }
 
         return (true, nil)
