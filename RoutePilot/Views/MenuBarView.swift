@@ -18,14 +18,12 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 12) {
             if showSettings {
                 SettingsView(showSettings: $showSettings)
-                    .frame(minHeight: 450)
             } else if showDetailView {
                 DetailView(
                     showDetailView: $showDetailView,
                     vpnName: selectedVPN ?? app.activeVPNs.first?.name ?? app.vpnConfigs.first?.name ?? "",
                     initialTab: detailInitialTab
                 )
-                .frame(minHeight: 450)
             } else {
                 MainView(
                     selectedVPN: $selectedVPN,
