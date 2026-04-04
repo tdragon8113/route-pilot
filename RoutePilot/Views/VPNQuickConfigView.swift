@@ -4,7 +4,6 @@
 //
 
 import SwiftUI
-import Combine
 
 /// VPN 快速配置组件：路由管理、操作按钮
 struct VPNQuickConfigView: View {
