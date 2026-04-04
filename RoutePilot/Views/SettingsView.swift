@@ -33,32 +33,17 @@ struct SettingsView: View {
         daemonRunning = DaemonManager.isRunning
     }
 
-    /// 一键启用后台服务：配置免密授权 + 安装守护进程
+    /// 一键启用后台服务：安装守护进程（同时配置免密授权）
     private func setupBackgroundService() {
         isSettingUp = true
         daemonError = nil
 
         Task {
-            // 步骤 1: 配置免密授权（如果未配置）
-            if !app.passwordlessConfigured {
-                let success = await RouteService.shared.configurePasswordless()
-                if !success {
-                    await MainActor.run {
-                        daemonError = "免密授权配置失败"
-                        isSettingUp = false
-                    }
-                    return
-                }
-                await MainActor.run {
-                    app.passwordlessConfigured = true
-                }
-            }
-
-            // 步骤 2: 安装守护进程
             let result = DaemonManager.install()
             await MainActor.run {
                 isSettingUp = false
                 if result.0 {
+                    app.passwordlessConfigured = true
                     checkDaemonStatus()
                 } else {
                     daemonError = result.1 ?? "安装失败"

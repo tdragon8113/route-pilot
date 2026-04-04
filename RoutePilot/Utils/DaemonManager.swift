@@ -40,31 +40,31 @@ enum DaemonManager {
         }
     }
 
-    /// 安装守护进程
+    /// 安装守护进程（同时配置免密授权）
     /// - Returns: (成功, 错误信息)
     static func install() -> (Bool, String?) {
-        // 1. 检查免密授权
-        guard FileManager.default.fileExists(atPath: "/etc/sudoers.d/autoroute") else {
-            return (false, "请先配置免密授权")
-        }
-
-        // 2. 获取应用内嵌的 daemon 可执行文件路径
+        // 1. 获取应用内嵌的 daemon 可执行文件路径
         let bundledDaemon = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/\(daemonBinaryName)")
 
         guard FileManager.default.fileExists(atPath: bundledDaemon.path) else {
             return (false, "找不到守护进程可执行文件，请重新安装应用")
         }
 
-        // 3. 复制到 /usr/local/bin/
-        let copyScript = """
+        // 2. 一次性执行：配置免密授权 + 复制守护进程（只需一次授权）
+        let username = NSUserName()
+        let sudoersContent = "\(username) ALL=(ALL) NOPASSWD: /sbin/route"
+        let installScript = """
+        mkdir -p /etc/sudoers.d && \
+        echo '\(sudoersContent)' | tee /etc/sudoers.d/autoroute && \
+        chmod 440 /etc/sudoers.d/autoroute && \
         mkdir -p /usr/local/bin && \
         cp '\(bundledDaemon.path)' '\(daemonBinaryPath)' && \
         chmod 755 '\(daemonBinaryPath)'
         """
 
-        let copyResult = runWithAdminPrivileges(copyScript)
-        guard copyResult.success else {
-            return (false, "复制守护进程失败: \(copyResult.error ?? "未知错误")")
+        let installResult = runWithAdminPrivileges(installScript)
+        guard installResult.success else {
+            return (false, "安装失败: \(installResult.error ?? "未知错误")")
         }
 
         // 4. 生成 LaunchAgent plist
