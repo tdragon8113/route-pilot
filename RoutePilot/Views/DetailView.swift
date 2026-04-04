@@ -25,7 +25,8 @@ struct DetailView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 16) {
+            // 标题栏
             HStack {
                 Button(action: { showDetailView = false }) {
                     Image(systemName: "chevron.left")
@@ -38,8 +39,6 @@ struct DetailView: View {
                 Spacer()
             }
 
-            Divider()
-
             Picker("", selection: $selectedTab) {
                 Text("当前路由").tag(0)
                 Text("操作日志").tag(1)
@@ -51,18 +50,14 @@ struct DetailView: View {
             } else {
                 logsView
             }
-
-            Divider()
-
-            Button("返回") {
-                showDetailView = false
-            }
         }
+        .padding()
+        .frame(width: 300, height: 400)
     }
 
     @ViewBuilder
     private var routesView: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("接口: \(vpnStatus?.interface ?? "未连接")")
                     .font(.caption)
@@ -106,13 +101,18 @@ struct DetailView: View {
                 }
             }
         }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
     }
 
     @ViewBuilder
     private var logsView: some View {
         let vpnLogs = app.logs.filter { $0.vpnName == nil || $0.vpnName == vpnName }
 
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("共 \(vpnLogs.count) 条")
                     .font(.caption)
@@ -151,5 +151,10 @@ struct DetailView: View {
                 }
             }
         }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
     }
 }
