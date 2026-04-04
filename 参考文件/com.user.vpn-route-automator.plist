@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.vpn-route-automator</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/vpn-route-automator</string>
+    </array>
+    
+    <!-- 仅在文件出现时触发 -->
+    <key>RunAtLoad</key>
+    <false/>
+    
+    <key>WatchPaths</key>
+    <array>
+        <string>/var/run/ppp0.pid</string>
+    </array>
+    
+    <!-- 运行一次后退出 -->
+    <key>KeepAlive</key>
+    <false/>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
+    </dict>
+</dict>
+</plist>

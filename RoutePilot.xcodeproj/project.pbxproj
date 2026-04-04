@@ -27,6 +27,9 @@
 		8A6716D72F7F9F3F007F94C1 /* release.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = release.yml; sourceTree = "<group>"; };
 		8A6716DC2F7FBA1D007F94C1 /* 2026-04-03-vpn-monitoring-refactor-design.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "2026-04-03-vpn-monitoring-refactor-design.md"; sourceTree = "<group>"; };
 		8AFED87E2F800D50008D02CC /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
+		8AFED88A2F811643008D02CC /* com.user.vpn-route-automator.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "com.user.vpn-route-automator.plist"; sourceTree = "<group>"; };
+		8AFED88B2F81166C008D02CC /* vpn-route-automator.conf */ = {isa = PBXFileReference; lastKnownFileType = text; path = "vpn-route-automator.conf"; sourceTree = "<group>"; };
+		8AFED88C2F811674008D02CC /* vpn-route-automator */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "vpn-route-automator"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -51,6 +54,7 @@
 		8A10E7D32F7D20A8008E16CF = {
 			isa = PBXGroup;
 			children = (
+				8AFED8892F811615008D02CC /* 参考文件 */,
 				8AFED8802F8012FA008D02CC /* assets */,
 				8AFED87E2F800D50008D02CC /* CHANGELOG.md */,
 				8A6716DF2F7FBA1D007F94C1 /* docs */,
@@ -128,6 +132,16 @@
 			path = assets;
 			sourceTree = "<group>";
 		};
+		8AFED8892F811615008D02CC /* 参考文件 */ = {
+			isa = PBXGroup;
+			children = (
+				8AFED88C2F811674008D02CC /* vpn-route-automator */,
+				8AFED88B2F81166C008D02CC /* vpn-route-automator.conf */,
+				8AFED88A2F811643008D02CC /* com.user.vpn-route-automator.plist */,
+			);
+			path = "参考文件";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -135,6 +149,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8A10E7E72F7D20A9008E16CF /* Build configuration list for PBXNativeTarget "RoutePilot" */;
 			buildPhases = (
+				8AFED8922F812347008D02CC /* Build Daemon */,
 				8A10E7D82F7D20A8008E16CF /* Sources */,
 				8A10E7D92F7D20A8008E16CF /* Frameworks */,
 				8A10E7DA2F7D20A8008E16CF /* Resources */,
@@ -204,6 +219,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+			8AFED8922F812347008D02CC /* Build Daemon */ = {
+				isa = PBXShellScriptBuildPhase;
+				alwaysOutOfDate = 1;
+				buildActionMask = 2147483647;
+				files = (
+				);
+				inputPaths = (
+					"$(SRCROOT)/build/route-pilot-daemon",
+				);
+				outputPaths = (
+					"$(BUILT_PRODUCTS_DIR)/$(PRODUCT_NAME).app/Contents/Resources/route-pilot-daemon",
+				);
+				runOnlyForDeploymentPostprocessing = 0;
+				shellPath = /bin/sh;
+				shellScript = "# Copy pre-built daemon to app Resources\nDAEMON_PREBUILT=\"$SRCROOT/build/route-pilot-daemon\"\nDAEMON_OUTPUT=\"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/route-pilot-daemon\"\n\nmkdir -p \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources\"\n\nif [ -f \"$DAEMON_PREBUILT\" ]; then\n    cp \"$DAEMON_PREBUILT\" \"$DAEMON_OUTPUT\"\n    chmod +x \"$DAEMON_OUTPUT\"\n    echo \"Copied daemon: $DAEMON_OUTPUT\"\n    ls -lh \"$DAEMON_OUTPUT\"\nelse\n    echo \"Error: Pre-built daemon not found at $DAEMON_PREBUILT\"\n    echo \"Run scripts/build-daemon.sh first\"\n    exit 1\nfi\n";
+			};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8A10E7D82F7D20A8008E16CF /* Sources */ = {

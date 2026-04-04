@@ -101,13 +101,13 @@ class AppController: ObservableObject {
     }
 
     private func handleVPNConnected(_ vpnName: String) {
-        guard let config = vpnConfigs.first(where: { $0.name == vpnName }),
-              config.enabled else {
-            log("VPN \(vpnName) 未启用，跳过自动添加路由", level: .info, vpnName: vpnName)
-            return
-        }
+        // 守护进程负责自动路由，GUI 只记录状态
         log("检测到 VPN 连接: \(vpnName)", level: .info, vpnName: vpnName)
-        autoAddRoutes(for: vpnName)
+
+        // 如果守护进程未安装，提示用户
+        if !DaemonManager.isInstalled {
+            log("守护进程未安装，自动路由功能不可用", level: .warning, vpnName: vpnName)
+        }
     }
 
     private func handleVPDisconnected(_ vpnName: String) {
@@ -261,19 +261,6 @@ class AppController: ObservableObject {
     }
 
     // MARK: - 路由操作
-    private func autoAddRoutes(for vpnName: String) {
-        guard let config = vpnConfigs.first(where: { $0.name == vpnName }) else {
-            log("未找到 VPN 配置: \(vpnName)", level: .error, vpnName: vpnName)
-            return
-        }
-        guard config.enabled else {
-            log("VPN \(vpnName) 已禁用，跳过自动添加路由", level: .info, vpnName: vpnName)
-            return
-        }
-        log("自动添加路由: \(vpnName)，共 \(config.routes.count) 条规则", level: .info, vpnName: vpnName)
-        addRoutes(for: vpnName)
-    }
-
     func addRoutes(for vpnName: String) {
         guard let config = vpnConfigs.first(where: { $0.name == vpnName }) else { return }
         let routes = config.routes.filter { $0.enabled }

@@ -18,7 +18,15 @@
       "mcp__plugin_everything-claude-code_exa__web_search_exa",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(open:*)",
+      "Bash(grep -r \"LoginServiceKit\" /tmp/Mos/*.xcodeproj)",
+      "Read(//tmp/Mos/**)",
+      "Bash(find /tmp/Mos -name \"*.swift\" -exec grep -l \"package\\\\|import LoginServiceKit\" {} \\\\;)",
+      "Bash(chmod +x scripts/build-daemon.sh)",
+      "Bash(./scripts/build-daemon.sh)",
+      "Bash(ls:*)"
     ]
   }
 }

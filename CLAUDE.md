@@ -4,59 +4,83 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-RoutePilot 是一个 macOS 菜单栏应用，用于自动管理 VPN 路由。当 VPN 连接时，自动通过 VPN 接口添加配置的路由规则。支持多个 VPN 同时连接，每个 VPN 可独立配置路由规则。
+RoutePilot 是一个 macOS 菜单栏应用，用于自动管理 VPN 路由。采用 GUI + 守护进程架构，即使退出应用，VPN 连接时仍会自动添加预设路由规则。
 
 ## 构建命令
 
 ```bash
-# 构建项目
+# 构建守护进程（需要先执行）
+./scripts/build-daemon.sh
+
+# 构建项目（会自动打包守护进程到 app）
 xcodebuild -project RoutePilot.xcodeproj -scheme RoutePilot -configuration Debug build
 
-# 清理构建
-xcodebuild -project RoutePilot.xcodeproj -scheme RoutePilot clean
-
-# 运行应用（构建后）
+# 运行应用
 open ~/Library/Developer/Xcode/DerivedData/RoutePilot-*/Build/Products/Debug/RoutePilot.app
 ```
 
 ## 架构说明
+
+### 整体架构
+
+```
+┌─────────────────────────────────────────────┐
+│           RoutePilot GUI 应用                │
+│  - 配置管理（VPN、路由规则）                  │
+│  - 手动操作（一键添加/删除路由）              │
+│  - 安装/卸载守护进程                          │
+└──────────────────┬──────────────────────────┘
+                   │ 共享配置文件
+                   ▼
+┌─────────────────────────────────────────────┐
+│         RoutePilotDaemon（守护进程）          │
+│  - SCDynamicStore 事件监听 VPN 状态          │
+│  - 自动执行路由添加                           │
+│  - launchd 管理（LaunchAgent）               │
+└─────────────────────────────────────────────┘
+```
 
 ### 目录结构
 
 ```
 RoutePilot/
 ├── App/           # 应用入口
-├── Models/        # 数据模型
+├── Models/        # 数据模型（VPNConfig、RouteItem）
 ├── Views/         # SwiftUI 视图
-├── ViewModels/    # 状态管理
-├── Services/      # 业务服务
-└── Utils/         # 工具类
+├── ViewModels/    # 状态管理（AppController）
+├── Services/      # 业务服务（VPN、路由、DNS、日志）
+├── Utils/         # 工具类（DaemonManager、LoginServiceKit）
+├── Daemon/        # 守护进程源码
+└── scripts/       # 构建脚本
 ```
 
 ### 核心组件
 
-**AppController** (`ViewModels/AppController.swift`) - 主控制器，ObservableObject 单例
-- 系统状态：VPN 列表、连接状态、路由表
-- 用户配置：每个 VPN 的路由规则和自定义接口
-- 网络监控：NWPathMonitor 监听变化，自动触发路由添加
+**AppController** (`ViewModels/AppController.swift`)
+- 主控制器，ObservableObject 单例
+- VPN 配置管理、状态展示
+- 不再自动添加路由（由守护进程负责）
 
-**VPNService** (`Services/VPNService.swift`) - VPN 检测服务 (Actor)
+**VPNMonitor** (`ViewModels/VPNMonitor.swift`) - Actor
+- SCDynamicStore 监听 VPN 状态变化
+- 事件驱动，通知 GUI 更新界面
+
+**VPNService** (`Services/VPNService.swift`) - Actor
 - 获取系统 VPN 列表和连接状态
 - 解析 `scutil --nc list` 输出
-- 自动检测或使用自定义接口名
 
-**RouteService** (`Services/RouteService.swift`) - 路由操作服务 (Actor)
+**RouteService** (`Services/RouteService.swift`) - Actor
 - 添加/删除路由规则
 - 免密授权配置（sudoers.d）
-- 权限处理：免密模式 or AppleScript 系统授权
 
-**LogService** (`Services/LogService.swift`) - 日志服务 (Actor)
-- 日志文件：`~/Library/Logs/RoutePilot/operations.log`
-- 支持分级：debug、info、success、warning、error
+**DaemonManager** (`Utils/DaemonManager.swift`)
+- 安装/卸载/启动/停止守护进程
+- 生成 LaunchAgent plist
 
-**ShellRunner** (`Utils/ShellRunner.swift`) - Shell 命令执行工具 (Actor)
-- 执行系统命令并返回输出
-- 执行 AppleScript 获取管理员权限
+**RoutePilotDaemon** (`Daemon/main.swift`)
+- 独立进程，通过 SCDynamicStore 监听 VPN
+- 读取共享配置，自动执行路由
+- 日志：`~/Library/Logs/RoutePilot/daemon.log`
 
 ### 关键系统命令
 
@@ -69,31 +93,19 @@ RoutePilot/
 | 添加路由 | `route add 10.0.0.0/8 -interface ppp0` |
 | 删除路由 | `route delete 10.0.0.0/8 -interface ppp0` |
 
-### VPN 状态监控
-
-使用 `NWPathMonitor` 监听网络变化：
-1. 网络变化触发 `checkVPNStatus()`
-2. 解析已连接 VPN，获取接口名
-3. 对比 `previousVPNNames` 检测新连接
-4. 对新连接 VPN 自动调用 `autoAddRoutes()`
-
-### 自定义接口
-
-每个 VPN 可设置 `customInterface`：
-- 手动指定接口名（如 `ppp0`、`utun4`）
-- 优先级高于自动检测
-- 设置后验证接口是否 UP 和 RUNNING
-
 ### 权限处理
 
-两种执行路由命令方式：
-1. **免密模式**：配置 `/etc/sudoers.d/autoroute`
+路由操作需要 root 权限：
+1. **免密模式**：配置 `/etc/sudoers.d/autoroute`（推荐）
 2. **系统授权**：AppleScript `do shell script ... with administrator privileges`
+
+守护进程执行路由时使用 `sudo route add ...`，依赖免密授权。
 
 ### 配置持久化
 
 - 配置文件：`~/Library/Application Support/RoutePilot/config.json`
-- 日志文件：`~/Library/Logs/RoutePilot/operations.log`
+- GUI 日志：`~/Library/Logs/RoutePilot/operations.log`
+- 守护进程日志：`~/Library/Logs/RoutePilot/daemon.log`
 
 ## 调试命令
 
@@ -102,33 +114,35 @@ RoutePilot/
 scutil --nc list | grep Connected
 
 # 查看路由表
-netstat -rn | grep ppp
+netstat -rn | grep -E "ppp|utun"
 
-# 查看接口状态
-ifconfig ppp0
+# 查看守护进程状态
+launchctl list | grep RoutePilot
+ps aux | grep route-pilot-daemon
 
-# 查看日志
-cat ~/Library/Logs/RoutePilot/operations.log
+# 查看守护进程日志
+tail -f ~/Library/Logs/RoutePilot/daemon.log
 
-# 检查免密配置
-cat /etc/sudoers.d/autoroute
+# 手动控制守护进程
+launchctl load ~/Library/LaunchAgents/com.tangda.RoutePilotDaemon.plist
+launchctl unload ~/Library/LaunchAgents/com.tangda.RoutePilotDaemon.plist
 ```
 
 ## 发布流程
 
 ```bash
 # 创建版本标签触发 CI 和 Release
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 GitHub Actions 工作流：
-- **CI** (`.github/workflows/ci.yml`) - 每次 push/PR 验证构建
-- **Release** (`.github/workflows/release.yml`) - 打标签时打包发布 DMG
+- **CI** (`.github/workflows/ci.yml`) - 构建 daemon + 验证构建
+- **Release** (`.github/workflows/release.yml`) - 打包发布 DMG
 
 ## 注意事项
 
-- **沙盒限制**：启用 App Sandbox 可能限制文件写入和系统命令执行
-- **VPN 类型**：L2TP/IPSec 使用 `ppp0`，其他 VPN 可能使用 `utun` 接口
-- **多 VPN**：同时连接多个 VPN 时，每个有独立接口名
-- **路由残留**：VPN 断开后手动添加的路由可能残留，需手动清理
+- **守护进程依赖免密授权**：必须先配置 `/etc/sudoers.d/autoroute`
+- **VPN 类型**：L2TP/IPSec 使用 `ppp0`，IKEv2 使用 `utun`
+- **多 VPN**：同时连接多个 VPN 时，守护进程分别处理
+- **配置共享**：GUI 和守护进程读取同一配置文件

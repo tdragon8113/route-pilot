@@ -16,8 +16,34 @@ struct MainView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // 守护进程未安装提示（优先级最高）
+            if !DaemonManager.isInstalled && app.passwordlessConfigured {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("自动路由未启用")
+                            .font(.caption)
+                        Text("请安装守护进程")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Button("安装") {
+                        showSettings = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+                .padding(8)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.orange.opacity(0.1))
+                )
+                Divider()
+            }
             // 免密状态提示
-            if !app.passwordlessConfigured {
+            else if !app.passwordlessConfigured {
                 HStack {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundColor(.orange)

@@ -60,6 +60,11 @@ jobs:
           echo "Timeout waiting for CI."
           exit 1
 
+      - name: Build Daemon
+        run: |
+          chmod +x scripts/build-daemon.sh
+          ./scripts/build-daemon.sh
+
       - name: Build
         run: |
           xcodebuild -project RoutePilot.xcodeproj \

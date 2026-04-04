@@ -10,6 +10,9 @@ struct SettingsView: View {
     @Binding var showSettings: Bool
     @ObservedObject private var app = AppController.shared
     @State private var launchAtLogin = false
+    @State private var daemonInstalled = false
+    @State private var daemonRunning = false
+    @State private var daemonError: String?
 
     private func toggleLaunchAtLogin(_ enabled: Bool) {
         if enabled {
@@ -17,12 +20,41 @@ struct SettingsView: View {
         } else {
             LoginServiceKit.removeLoginItems()
         }
-        // 刷新状态
         launchAtLogin = LoginServiceKit.isExistLoginItems()
     }
 
     private func checkLaunchStatus() -> Bool {
         LoginServiceKit.isExistLoginItems()
+    }
+
+    private func checkDaemonStatus() {
+        daemonInstalled = DaemonManager.isInstalled
+        daemonRunning = DaemonManager.isRunning
+    }
+
+    private func installDaemon() {
+        guard app.passwordlessConfigured else {
+            daemonError = "请先配置免密授权"
+            return
+        }
+
+        daemonError = nil
+        let result = DaemonManager.install()
+        if result.0 {
+            checkDaemonStatus()
+        } else {
+            daemonError = result.1 ?? "安装失败"
+        }
+    }
+
+    private func uninstallDaemon() {
+        daemonError = nil
+        let result = DaemonManager.uninstall()
+        if result.0 {
+            checkDaemonStatus()
+        } else {
+            daemonError = result.1 ?? "卸载失败"
+        }
     }
 
     var body: some View {
@@ -41,6 +73,76 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    // MARK: - 后台服务（放在最前面，最重要的设置）
+                    SettingsSection(title: "后台服务", icon: "server.rack") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("守护进程")
+                                        .font(.subheadline)
+                                    Text("VPN 连接时自动添加路由，退出应用后仍生效")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                if daemonInstalled {
+                                    Image(systemName: daemonRunning ? "checkmark.circle.fill" : "pause.circle.fill")
+                                        .foregroundColor(daemonRunning ? .green : .orange)
+                                        .font(.caption)
+                                }
+                            }
+
+                            // 未安装时显示醒目提示
+                            if !daemonInstalled {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .foregroundColor(.orange)
+                                        Text("自动路由功能需要安装守护进程")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+
+                                    if !app.passwordlessConfigured {
+                                        Text("请先在下方「权限设置」中配置免密授权")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Button("安装守护进程") {
+                                            installDaemon()
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .controlSize(.small)
+                                    }
+                                }
+                                .padding(8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.orange.opacity(0.1))
+                                )
+                            } else {
+                                // 已安装显示状态
+                                HStack {
+                                    Text(daemonRunning ? "运行中" : "已停止")
+                                        .font(.caption)
+                                        .foregroundColor(daemonRunning ? .green : .secondary)
+                                    Spacer()
+                                    Button("卸载", role: .destructive) {
+                                        uninstallDaemon()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                            }
+
+                            if let error = daemonError {
+                                Text(error)
+                                    .font(.caption2)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                    }
+
                     // MARK: - 权限设置
                     SettingsSection(title: "权限设置", icon: "key.fill") {
                         HStack {
@@ -68,11 +170,13 @@ struct SettingsView: View {
 
                     // MARK: - 应用设置
                     SettingsSection(title: "应用设置", icon: "gearshape.fill") {
-                        Toggle("开机启动", isOn: Binding(
-                            get: { launchAtLogin },
-                            set: { toggleLaunchAtLogin($0) }
-                        ))
-                        .font(.subheadline)
+                        VStack(alignment: .leading, spacing: 10) {
+                            Toggle("开机启动", isOn: Binding(
+                                get: { launchAtLogin },
+                                set: { toggleLaunchAtLogin($0) }
+                            ))
+                            .font(.subheadline)
+                        }
                     }
 
                     // MARK: - VPN 管理
@@ -100,7 +204,7 @@ struct SettingsView: View {
                             Text("版本")
                                 .font(.subheadline)
                             Spacer()
-                            Text("1.0.0")
+                            Text("1.2.0")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -124,13 +228,14 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
         }
         .padding()
-        .frame(width: 300, height: 400)
+        .frame(width: 300, height: 450)
         .onAppear {
             launchAtLogin = checkLaunchStatus()
+            checkDaemonStatus()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            // 返回应用时刷新状态
             launchAtLogin = checkLaunchStatus()
+            checkDaemonStatus()
         }
     }
 }
