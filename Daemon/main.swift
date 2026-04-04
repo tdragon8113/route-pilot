@@ -76,52 +76,61 @@ func isVPNInterface(_ interface: String) -> Bool {
     interface.hasPrefix("ipsec")
 }
 
-func getVPNNameForInterface(_ interface: String) -> String? {
-    let task = Process()
-    task.executableURL = URL(fileURLWithPath: "/usr/sbin/scutil")
-    task.arguments = ["--nc", "list"]
+func getVPNNameForInterface(_ interface: String, retryCount: Int = 3) -> String? {
+    for attempt in 1...retryCount {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/scutil")
+        task.arguments = ["--nc", "list"]
 
-    let pipe = Pipe()
-    task.standardOutput = pipe
+        let pipe = Pipe()
+        task.standardOutput = pipe
 
-    do {
-        try task.run()
-        task.waitUntilExit()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8) ?? ""
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
 
-        for line in output.split(separator: "\n") {
-            let lineStr = String(line)
-            guard lineStr.contains("(Connected)") else { continue }
+            for line in output.split(separator: "\n") {
+                let lineStr = String(line)
+                guard lineStr.contains("(Connected)") else { continue }
 
-            // 提取 VPN 名称
-            let pattern = "\"([^\"]+)\""
-            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
-            let range = NSRange(lineStr.startIndex..., in: lineStr)
-            let matches = regex.matches(in: lineStr, range: range)
+                // 提取 VPN 名称
+                let pattern = "\"([^\"]+)\""
+                guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+                let range = NSRange(lineStr.startIndex..., in: lineStr)
+                let matches = regex.matches(in: lineStr, range: range)
 
-            guard let nameMatch = matches.first,
-                  let vpnNameRange = Range(nameMatch.range(at: 1), in: lineStr) else { continue }
+                guard let nameMatch = matches.first,
+                      let vpnNameRange = Range(nameMatch.range(at: 1), in: lineStr) else { continue }
 
-            let vpnName = String(lineStr[vpnNameRange])
+                let vpnName = String(lineStr[vpnNameRange])
 
-            // 检查接口是否匹配
-            let statusTask = Process()
-            statusTask.executableURL = URL(fileURLWithPath: "/usr/sbin/scutil")
-            statusTask.arguments = ["--nc", "status", vpnName]
+                // 检查接口是否匹配
+                let statusTask = Process()
+                statusTask.executableURL = URL(fileURLWithPath: "/usr/sbin/scutil")
+                statusTask.arguments = ["--nc", "status", vpnName]
 
-            let statusPipe = Pipe()
-            statusTask.standardOutput = statusPipe
-            try? statusTask.run()
-            statusTask.waitUntilExit()
-            let statusData = statusPipe.fileHandleForReading.readDataToEndOfFile()
-            let statusOutput = String(data: statusData, encoding: .utf8) ?? ""
+                let statusPipe = Pipe()
+                statusTask.standardOutput = statusPipe
+                try? statusTask.run()
+                statusTask.waitUntilExit()
+                let statusData = statusPipe.fileHandleForReading.readDataToEndOfFile()
+                let statusOutput = String(data: statusData, encoding: .utf8) ?? ""
 
-            if statusOutput.contains("InterfaceName : \(interface)") {
-                return vpnName
+                if statusOutput.contains("InterfaceName : \(interface)") {
+                    return vpnName
+                }
             }
+        } catch {
+            log("获取 VPN 名称失败 (尝试 \(attempt)/\(retryCount)): \(error)")
         }
-    } catch {}
+
+        // 重试前等待
+        if attempt < retryCount {
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+    }
 
     return nil
 }

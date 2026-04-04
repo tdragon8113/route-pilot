@@ -167,7 +167,11 @@ enum DaemonManager {
     // MARK: - 私有方法
 
     private static func generatePlist() -> String {
-        """
+        // 获取用户日志目录
+        let logDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Logs/RoutePilot").path
+
+        return """
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0">
@@ -188,9 +192,9 @@ enum DaemonManager {
                 <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
             </dict>
             <key>StandardOutPath</key>
-            <string>/tmp/route-pilot-daemon.log</string>
+            <string>\(logDir)/daemon.log</string>
             <key>StandardErrorPath</key>
-            <string>/tmp/route-pilot-daemon.err</string>
+            <string>\(logDir)/daemon.err</string>
         </dict>
         </plist>
         """

@@ -57,6 +57,26 @@ struct SettingsView: View {
         }
     }
 
+    private func startDaemon() {
+        daemonError = nil
+        let result = DaemonManager.start()
+        if result.0 {
+            checkDaemonStatus()
+        } else {
+            daemonError = result.1 ?? "启动失败"
+        }
+    }
+
+    private func stopDaemon() {
+        daemonError = nil
+        let result = DaemonManager.stop()
+        if result.0 {
+            checkDaemonStatus()
+        } else {
+            daemonError = result.1 ?? "停止失败"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // 标题栏
@@ -125,8 +145,24 @@ struct SettingsView: View {
                                 HStack {
                                     Text(daemonRunning ? "运行中" : "已停止")
                                         .font(.caption)
-                                        .foregroundColor(daemonRunning ? .green : .secondary)
+                                        .foregroundColor(daemonRunning ? .green : .orange)
                                     Spacer()
+
+                                    // 启动/停止按钮
+                                    if daemonRunning {
+                                        Button("停止") {
+                                            stopDaemon()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    } else {
+                                        Button("启动") {
+                                            startDaemon()
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .controlSize(.small)
+                                    }
+
                                     Button("卸载", role: .destructive) {
                                         uninstallDaemon()
                                     }
@@ -204,7 +240,7 @@ struct SettingsView: View {
                             Text("版本")
                                 .font(.subheadline)
                             Spacer()
-                            Text("1.2.0")
+                            Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }

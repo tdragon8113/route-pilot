@@ -26,7 +26,8 @@
       "Bash(find /tmp/Mos -name \"*.swift\" -exec grep -l \"package\\\\|import LoginServiceKit\" {} \\\\;)",
       "Bash(chmod +x scripts/build-daemon.sh)",
       "Bash(./scripts/build-daemon.sh)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(wc -l /Users/tangdinglong/XCodeProjects/RoutePilot/RoutePilot/**/*.swift /Users/tangdinglong/XCodeProjects/RoutePilot/Daemon/*.swift)"
     ]
   }
 }
