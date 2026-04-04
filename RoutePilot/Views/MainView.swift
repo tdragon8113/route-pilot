@@ -74,15 +74,9 @@ struct MainView: View {
             }
 
             // VPN 列表
-            HStack {
-                Text("VPN 列表")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("\(app.vpnConfigs.filter { $0.enabled && !$0.hidden }.count) 个")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
+            Text("VPN 列表")
+                .font(.caption)
+                .foregroundColor(.secondary)
 
             if app.systemVPNs.isEmpty {
                 VStack(spacing: 8) {
