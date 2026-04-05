@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Network
 
 /// 工具页面
 struct ToolsView: View {
@@ -59,6 +60,12 @@ struct ToolsView: View {
     @State private var dnsRecords: [(type: String, value: String)] = []
     @State private var isQueryingDNS = false
     @State private var dnsError: String?
+
+    // 端口测试状态
+    @State private var portHost: String = ""
+    @State private var portNumber: String = ""
+    @State private var portResult: String?
+    @State private var isTestingPort = false
 
     struct DebugResult {
         let resolvedIP: String?
@@ -557,6 +564,47 @@ struct ToolsView: View {
                     .fill(Color(nsColor: .controlBackgroundColor))
             )
 
+            // 端口连通性测试
+            VStack(alignment: .leading, spacing: 8) {
+                Text("端口测试")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("测试 TCP 端口连通性")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack {
+                    TextField("主机", text: $portHost)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.small)
+                        .frame(width: 120)
+
+                    TextField("端口", text: $portNumber)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.small)
+                        .frame(width: 60)
+
+                    Button(isTestingPort ? "测试中..." : "测试") {
+                        testPort()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(portHost.isEmpty || portNumber.isEmpty || isTestingPort)
+                }
+
+                if let result = portResult {
+                    Text(result)
+                        .font(.caption)
+                        .foregroundColor(result.hasPrefix("✓") ? .green : .orange)
+                }
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+
             Spacer()
             }
         }
@@ -932,6 +980,48 @@ struct ToolsView: View {
                     isQueryingDNS = false
                     dnsError = "查询失败"
                 }
+            }
+        }
+    }
+
+    private func testPort() {
+        guard !portHost.isEmpty, !portNumber.isEmpty, let port = UInt16(portNumber) else { return }
+        isTestingPort = true
+        portResult = nil
+
+        let host = NWEndpoint.Host(portHost)
+        guard let nwPort = NWEndpoint.Port(rawValue: port) else {
+            portResult = "✗ 无效的端口号"
+            isTestingPort = false
+            return
+        }
+
+        let connection = NWConnection(host: host, port: nwPort, using: .tcp)
+
+        connection.stateUpdateHandler = { [self] state in
+            DispatchQueue.main.async {
+                switch state {
+                case .ready:
+                    self.portResult = "✓ 端口 \(self.portNumber) 开放"
+                    self.isTestingPort = false
+                    connection.cancel()
+                case .failed(let error):
+                    self.portResult = "✗ 端口 \(self.portNumber) 不可达"
+                    self.isTestingPort = false
+                default:
+                    break
+                }
+            }
+        }
+
+        connection.start(queue: .global())
+
+        // 5 秒超时
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [self] in
+            if isTestingPort {
+                portResult = "✗ 连接超时"
+                isTestingPort = false
+                connection.cancel()
             }
         }
     }
