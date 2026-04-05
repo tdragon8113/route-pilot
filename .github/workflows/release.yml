@@ -153,3 +153,46 @@ jobs:
           generate_release_notes: ${{ steps.changelog.outputs.use_auto == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-tap:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Get version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download DMG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download v${{ steps.version.outputs.version }} --pattern "RoutePilot.dmg"
+
+      - name: Calculate SHA256
+        id: sha
+        run: |
+          SHA=$(sha256sum RoutePilot.dmg | cut -d' ' -f1)
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Update Homebrew Tap
+        env:
+          GH_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          SHA=${{ steps.sha.outputs.sha }}
+
+          git clone https://x-access-token:${{ secrets.TAP_TOKEN }}@github.com/tdragon8113/homebrew-tap.git
+          cd homebrew-tap
+
+          sed -i "s/version \".*\"/version \"$VERSION\"/" Casks/route-pilot.rb
+          sed -i "s/sha256 \".*\"/sha256 \"$SHA\"/" Casks/route-pilot.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update to v$VERSION"
+          git push
