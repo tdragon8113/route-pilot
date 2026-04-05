@@ -73,6 +73,11 @@ xcodebuild -project RoutePilot.xcodeproj -scheme RoutePilot -configuration Relea
 
 首页点击「启用」即可一键完成免密授权和守护进程安装，之后即使退出应用，VPN 连接时仍会自动添加路由。
 
+**授权时会执行**：
+1. 配置免密授权 `/etc/sudoers.d/autoroute`（仅允许 `route add/delete`）
+2. 复制守护进程到 `~/Library/Application Support/RoutePilot/`
+3. 创建 LaunchAgent 并启动
+
 **工作原理**：
 - 守护进程通过 SCDynamicStore 监听 VPN 状态变化
 - 事件驱动，无需轮询
