@@ -11,6 +11,7 @@ struct PingView: View {
     @State private var pingResults: [String] = []
     @State private var isPinging = false
     @State private var pingProcess: Process?
+    @State private var pingStats: (packetLoss: String, avgLatency: String)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -58,6 +59,30 @@ struct PingView: View {
                         .fill(Color(nsColor: .controlBackgroundColor))
                 )
             }
+
+            // 统计摘要
+            if let stats = pingStats {
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Text("丢包率:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(stats.packetLoss)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(stats.packetLoss == "0%" ? .green : .orange)
+                    }
+                    HStack(spacing: 4) {
+                        Text("平均延迟:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(stats.avgLatency)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                }
+                .padding(.top, 4)
+            }
         }
         .padding(10)
         .background(
@@ -70,6 +95,7 @@ struct PingView: View {
         guard !pingTarget.isEmpty else { return }
         isPinging = true
         pingResults = []
+        pingStats = nil
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/ping")
@@ -97,6 +123,7 @@ struct PingView: View {
                 DispatchQueue.main.async {
                     self.isPinging = false
                     self.pingProcess = nil
+                    self.parsePingStats()
                 }
             }
         } catch {
@@ -108,5 +135,48 @@ struct PingView: View {
         pingProcess?.terminate()
         pingProcess = nil
         isPinging = false
+    }
+
+    private func parsePingStats() {
+        // 解析丢包率: "4 packets transmitted, 4 packets received, 0.0% packet loss"
+        // 解析延迟: "round-trip min/avg/max/stddev = 20.123/25.456/30.789/5.123 ms"
+        var packetLoss: String?
+        var avgLatency: String?
+
+        for result in pingResults {
+            // 解析丢包率
+            if result.contains("packet loss") {
+                let pattern = #"(\d+\.?\d*)% packet loss"#
+                if let range = result.range(of: pattern, options: .regularExpression) {
+                    let match = String(result[range])
+                    if let percentRange = match.range(of: #"\d+\.?\d*"#, options: .regularExpression) {
+                        let percent = String(match[percentRange])
+                        if let value = Double(percent) {
+                            packetLoss = value < 1 ? "0%" : String(format: "%.1f%%", value)
+                        }
+                    }
+                }
+            }
+
+            // 解析平均延迟
+            if result.contains("round-trip") || result.contains("rtt") {
+                // 格式: round-trip min/avg/max/stddev = 20.123/25.456/30.789/5.123 ms
+                let pattern = #"= (\d+\.?\d*)/(\d+\.?\d*)/(\d+\.?\d*)/(\d+\.?\d*) ms"#
+                if let range = result.range(of: pattern, options: .regularExpression) {
+                    let match = String(result[range])
+                    let numbers = match.components(separatedBy: "/")
+                    if numbers.count >= 2 {
+                        let avgStr = numbers[1].replacingOccurrences(of: "= ", with: "")
+                        if let avg = Double(avgStr) {
+                            avgLatency = String(format: "%.1f ms", avg)
+                        }
+                    }
+                }
+            }
+        }
+
+        if let loss = packetLoss, let latency = avgLatency {
+            pingStats = (packetLoss: loss, avgLatency: latency)
+        }
     }
 }

@@ -12,6 +12,7 @@ struct PortTestView: View {
     @State private var portNumber: String = ""
     @State private var portResult: String?
     @State private var isTestingPort = false
+    @State private var connectTime: Double?
 
     // 常用端口列表
     private let commonPorts: [(name: String, port: String)] = [
@@ -61,9 +62,17 @@ struct PortTestView: View {
             }
 
             if let result = portResult {
-                Text(result)
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundColor(result.hasPrefix("✓") ? .green : .orange)
+                HStack(spacing: 8) {
+                    Text(result)
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundColor(result.hasPrefix("✓") ? .green : .orange)
+
+                    if let time = connectTime, result.hasPrefix("✓") {
+                        Text("(\(String(format: "%.1f", time)) ms)")
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
         }
         .padding(10)
@@ -77,6 +86,7 @@ struct PortTestView: View {
         guard !portHost.isEmpty, !portNumber.isEmpty, let port = UInt16(portNumber) else { return }
         isTestingPort = true
         portResult = nil
+        connectTime = nil
 
         let host = NWEndpoint.Host(portHost)
         guard let nwPort = NWEndpoint.Port(rawValue: port) else {
@@ -85,12 +95,15 @@ struct PortTestView: View {
             return
         }
 
+        let startTime = Date()
         let connection = NWConnection(host: host, port: nwPort, using: .tcp)
 
         connection.stateUpdateHandler = { [self] state in
             DispatchQueue.main.async {
                 switch state {
                 case .ready:
+                    let elapsed = Date().timeIntervalSince(startTime) * 1000
+                    self.connectTime = elapsed
                     self.portResult = "✓ 端口 \(self.portNumber) 开放"
                     self.isTestingPort = false
                     connection.cancel()
