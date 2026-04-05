@@ -347,6 +347,17 @@ struct ToolsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
 
+                // VPN 环境警告
+                if !app.activeVPNs.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text("VPN 连接时可能无法正常追踪")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
+
                 HStack {
                     TextField("输入目标域名或 IP", text: $tracerouteTarget)
                         .textFieldStyle(.roundedBorder)
