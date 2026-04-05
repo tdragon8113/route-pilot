@@ -12,7 +12,7 @@ struct ClearableTextField: View {
     var width: CGFloat? = nil
 
     var body: some View {
-        HStack(spacing: 0) {
+        ZStack(alignment: .trailing) {
             TextField(placeholder, text: $text)
                 .textFieldStyle(.roundedBorder)
                 .controlSize(.small)
@@ -20,11 +20,11 @@ struct ClearableTextField: View {
             if !text.isEmpty {
                 Button(action: { text = "" }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.secondary.opacity(0.6))
                         .font(.system(size: 12))
                 }
                 .buttonStyle(.borderless)
-                .padding(.leading, 2)
+                .padding(.trailing, 6)
             }
         }
         .ifLet(width) { view, w in
