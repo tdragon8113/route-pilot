@@ -73,6 +73,26 @@ struct ToolsView: View {
         let matchedVPN: String?
     }
 
+    // 常用端口快捷按钮
+    struct PortQuickButton: View {
+        let name: String
+        let port: String
+        let currentPort: String
+        let onSelect: (String) -> Void
+
+        var body: some View {
+            if currentPort == port {
+                Button("\(name):\(port)") { onSelect(port) }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.mini)
+            } else {
+                Button("\(name):\(port)") { onSelect(port) }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+            }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -591,6 +611,18 @@ struct ToolsView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                     .disabled(portHost.isEmpty || portNumber.isEmpty || isTestingPort)
+                }
+
+                // 常用端口快捷选择
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        PortQuickButton(name: "SSH", port: "22", currentPort: portNumber) { portNumber = $0 }
+                        PortQuickButton(name: "HTTP", port: "80", currentPort: portNumber) { portNumber = $0 }
+                        PortQuickButton(name: "HTTPS", port: "443", currentPort: portNumber) { portNumber = $0 }
+                        PortQuickButton(name: "MySQL", port: "3306", currentPort: portNumber) { portNumber = $0 }
+                        PortQuickButton(name: "Redis", port: "6379", currentPort: portNumber) { portNumber = $0 }
+                        PortQuickButton(name: "Mongo", port: "27017", currentPort: portNumber) { portNumber = $0 }
+                    }
                 }
 
                 if let result = portResult {
