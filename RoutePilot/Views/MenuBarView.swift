@@ -40,6 +40,7 @@ struct MenuBarView: View {
         }
         .padding()
         .frame(width: 280)
+        .frame(maxHeight: showTools ? 700 : nil)
         .overlay(alignment: .top) {
             if let toast = app.currentToast {
                 ToastView(toast: toast, onDismiss: { app.clearToast() })

@@ -36,6 +36,5 @@ struct ToolsView: View {
                 }
             }
         }
-        .frame(maxHeight: 700)
     }
 }
