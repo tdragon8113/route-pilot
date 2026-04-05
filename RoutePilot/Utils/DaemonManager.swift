@@ -62,7 +62,7 @@ enum DaemonManager {
 
         // 2. 配置免密授权（需要 sudo）
         let username = NSUserName()
-        let sudoersContent = "\(username) ALL=(ALL) NOPASSWD: /sbin/route"
+        let sudoersContent = "\(username) ALL=(ALL) NOPASSWD: /sbin/route add, /sbin/route delete"
         let sudoersScript = "mkdir -p /etc/sudoers.d && echo '\(sudoersContent)' | tee /etc/sudoers.d/autoroute && chmod 440 /etc/sudoers.d/autoroute"
 
         let sudoersResult = runWithAdminPrivileges(sudoersScript)

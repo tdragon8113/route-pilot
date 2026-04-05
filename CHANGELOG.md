@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.2] - 2026-04-05
+
+### 改进
+
+- 免密授权精确限制为仅 route add/delete，提高安全性
+
 ## [v1.7.1] - 2026-04-05
 
 ### 改进
