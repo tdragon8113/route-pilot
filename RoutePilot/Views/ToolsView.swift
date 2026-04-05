@@ -24,14 +24,16 @@ struct ToolsView: View {
                 Spacer()
             }
 
-            VStack(alignment: .leading, spacing: 16) {
-                PublicIPView()
-                RouteQueryView()
-                RouteTableView()
-                TracerouteView()
-                PingView()
-                DNSQueryView()
-                PortTestView()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    PublicIPView()
+                    RouteQueryView()
+                    RouteTableView()
+                    TracerouteView()
+                    PingView()
+                    DNSQueryView()
+                    PortTestView()
+                }
             }
         }
     }
