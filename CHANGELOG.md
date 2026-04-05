@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.6.0] - 2026-04-05
+
+### 新功能
+
+- **Ping 测试** - 测试网络连通性，显示延迟和丢包率
+- **DNS 查询** - 查询域名解析记录
+- **端口测试** - 测试 TCP 端口连通性
+
+### 改进
+
+- 公网 IP 查询改用 HTTPS API，更安全
+- 路由追踪添加 VPN 环境警告提示
+
 ## [v1.5.0] - 2026-04-04
 
 ### 新功能
