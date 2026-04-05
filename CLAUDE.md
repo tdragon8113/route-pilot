@@ -170,3 +170,13 @@ git push origin main --tags
 - **VPN 类型**：L2TP/IPSec 使用 `ppp0`，IKEv2 使用 `utun`
 - **多 VPN**：同时连接多个 VPN 时，守护进程分别处理
 - **配置共享**：GUI 和守护进程读取同一配置文件
+
+## 后续计划
+
+| 项目 | 说明 | 优先级 |
+|------|------|--------|
+| 多语言扩展 | 添加日文、韩文等 | 低 |
+| 单元测试 | 提高代码质量，覆盖率 80%+ | 中 |
+| CI 优化 | Release 后自动更新 Homebrew tap SHA256 | 中 |
+| 官方 Homebrew | 项目 star 100+ 后申请加入官方 Cask | 低 |
+| 代码签名 | $99/年 Apple Developer，解决首次打开警告 | 低 |
