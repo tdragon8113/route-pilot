@@ -102,7 +102,7 @@ struct VPNQuickConfigView: View {
 
             if let routes = config?.routes, !routes.isEmpty {
                 ScrollView {
-                    VStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         ForEach(Array(routes.enumerated()), id: \.element.id) { index, route in
                             RouteRowView(
                                 route: route,
@@ -129,7 +129,7 @@ struct VPNQuickConfigView: View {
                         }
                     }
                 }
-                .frame(height: min(CGFloat(routes.count) * 36 + 4, 150))
+                .frame(height: min(CGFloat(routes.count) * 34 + 8, 150))
             }
 
             // 添加新路由
@@ -269,15 +269,15 @@ struct RouteRowView: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(isBeingDragged ? Color.accentColor.opacity(0.1) : Color.clear)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 6)
-                .stroke(isBeingDragged ? Color.accentColor : Color.clear, lineWidth: 2)
+                .stroke(isBeingDragged ? Color.accentColor : Color.clear, lineWidth: 1)
         )
         .shadow(color: isBeingDragged ? Color.black.opacity(0.3) : Color.clear, radius: isBeingDragged ? 4 : 0)
         .scaleEffect(isBeingDragged ? 1.02 : 1)
