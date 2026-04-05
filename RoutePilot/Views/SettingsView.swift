@@ -26,6 +26,7 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 16) {
                 BackgroundServiceSection()
+                ThemeSettingsSection()
                 AppSettingsSection()
                 AboutSection()
             }
