@@ -150,6 +150,21 @@ GitHub Actions 工作流：
 - **CI** (`.github/workflows/ci.yml`) - 构建 daemon + 验证构建
 - **Release** (`.github/workflows/release.yml`) - 打包发布 DMG，自动提取 CHANGELOG 对应版本内容
 
+### 发布后更新 Homebrew Tap
+
+```bash
+# 等待 Release 构建完成（约 2-3 分钟）
+# 检查 DMG 是否已上传
+gh release view v1.x.x --json assets --jq '.assets[] | select(.name == "RoutePilot.dmg") | .url'
+
+# 计算 SHA256 并更新 tap
+SHA=$(curl -sL https://github.com/tdragon8113/route-pilot/releases/download/v1.x.x/RoutePilot.dmg | shasum -a 256 | cut -d' ' -f1)
+cd /Users/tangdinglong/XCodeProjects/homebrew-tap
+sed -i '' "s/sha256 \".*\"/sha256 \"$SHA\"/" Casks/route-pilot.rb
+sed -i '' 's/version ".*"/version "1.x.x"/' Casks/route-pilot.rb
+git add . && git commit -m "Update to v1.x.x" && git push
+```
+
 如果发布出错需要重新发布：
 ```bash
 # 删除本地和远程 tag
