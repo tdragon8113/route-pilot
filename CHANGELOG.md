@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.1] - 2026-04-05
+
+### 改进
+
+- 守护进程移至用户目录，安装/卸载无需管理员权限
+- 仅配置免密授权时需要一次密码输入
+
 ## [v1.7.0] - 2026-04-05
 
 ### 新功能
