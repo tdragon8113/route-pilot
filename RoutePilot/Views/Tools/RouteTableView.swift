@@ -68,6 +68,12 @@ struct RouteTableView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+            } else if routeEntries.isEmpty {
+                Text("点击刷新按钮加载路由表")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
             } else if displayedRoutes.isEmpty {
                 Text("无匹配的路由")
                     .font(.caption)
@@ -117,9 +123,6 @@ struct RouteTableView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(nsColor: .controlBackgroundColor))
         )
-        .onAppear {
-            loadRouteTable()
-        }
     }
 
     private func loadRouteTable() {
