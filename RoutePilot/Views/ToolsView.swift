@@ -10,44 +10,45 @@ struct ToolsView: View {
     @Binding var showTools: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // 标题栏
-                HStack {
-                    Button(action: { showTools = false }) {
-                        Image(systemName: "chevron.left")
-                    }
-                    .buttonStyle(.borderless)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // 标题栏
+                    HStack {
+                        Button(action: { showTools = false }) {
+                            Image(systemName: "chevron.left")
+                        }
+                        .buttonStyle(.borderless)
 
-                    Text("工具")
-                        .font(.headline)
+                        Text("工具")
+                            .font(.headline)
+
+                        Spacer()
+                    }
+
+                    // 自适应网格布局：每 320px 一列
+                    toolsGrid(width: geometry.size.width)
 
                     Spacer()
                 }
-
-                // 公网 IP 查询
-                PublicIPView()
-
-                // 路由查询
-                RouteQueryView()
-
-                // 路由表查看
-                RouteTableView()
-
-                // 路由追踪
-                TracerouteView()
-
-                // Ping 测试
-                PingView()
-
-                // DNS 查询
-                DNSQueryView()
-
-                // 端口连通性测试
-                PortTestView()
-
-                Spacer()
+                .padding()
             }
+        }
+    }
+
+    @ViewBuilder
+    private func toolsGrid(width: CGFloat) -> some View {
+        let columnCount = max(1, Int(width / 320))
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: columnCount)
+
+        LazyVGrid(columns: columns, spacing: 16) {
+            PublicIPView()
+            RouteQueryView()
+            RouteTableView()
+            TracerouteView()
+            PingView()
+            DNSQueryView()
+            PortTestView()
         }
     }
 }
