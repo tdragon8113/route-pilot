@@ -1,0 +1,190 @@
+/*
+  Localizable.strings (Chinese Simplified)
+  RoutePilot
+*/
+
+// App
+"app.name" = "Route Pilot";
+
+// Tab titles
+"tab.vpn_list" = "VPN 列表";
+"tab.tools" = "工具";
+"tab.settings" = "设置";
+"tab.current_routes" = "当前路由";
+"tab.operation_logs" = "操作日志";
+
+// VPN
+"vpn.list" = "VPN 列表";
+"vpn.not_detected" = "未检测到 VPN";
+"vpn.connected" = "已连接";
+"vpn.disconnected" = "未连接";
+"vpn.disabled" = "已禁用";
+"vpn.hidden" = "已隐藏 (%d)";
+"vpn.enabled" = "已启用";
+
+// Routes
+"route.destination" = "目标地址";
+"route.gateway" = "网关";
+"route.interface" = "接口";
+"route.note" = "备注";
+"route.note_placeholder" = "备注 (可选)";
+"route.add_placeholder" = "目标地址 (如 10.0.0.0/8 或 github.com)";
+"route.add" = "添加路由";
+"route.remove" = "删除路由";
+"route.clear" = "清理路由";
+"route.view_routes" = "查看路由";
+"route.no_routes" = "无路由";
+"route.duplicate" = "路由规则已存在";
+"route.all_interfaces" = "全部";
+"route.edit_note" = "编辑备注";
+"route.count_unit" = "条路由";
+"route.enabled" = "已启用路由";
+"route.disabled" = "已禁用路由";
+
+// Background Service
+"service.not_enabled" = "后台服务未启用";
+"service.not_enabled_desc" = "VPN 连接时无法自动添加路由";
+"service.enable" = "启用";
+"service.enabling" = "启用中...";
+"service.installed" = "已安装";
+"service.running" = "运行中";
+"service.stopped" = "已停止";
+"service.start" = "启动";
+"service.stop" = "停止";
+"service.uninstall" = "卸载";
+"service.passwordless_configured" = "免密授权已配置";
+"service.enabled" = "后台服务已启用";
+"service.disabled" = "后台服务已禁用";
+"service.setup_hint" = "点击下方按钮，自动完成配置";
+"service.setup_desc" = "将自动配置免密授权并安装守护进程";
+
+// Tools
+"tools.title" = "工具";
+"tools.public_ip" = "公网 IP 查询";
+"tools.public_ip_desc" = "查询当前公网 IP 及地理位置";
+"tools.route_query" = "路由查询";
+"tools.route_query_desc" = "查询 IP 或域名走哪个网卡出口";
+"tools.route_table" = "路由表";
+"tools.route_table_desc" = "查看系统路由表";
+"tools.traceroute" = "路由追踪";
+"tools.traceroute_desc" = "追踪到目标的网络路径";
+"tools.ping" = "Ping 测试";
+"tools.ping_desc" = "测试网络连通性";
+"tools.dns" = "DNS 查询";
+"tools.dns_desc" = "查询域名解析记录";
+"tools.port" = "端口测试";
+"tools.port_desc" = "测试 TCP 端口连通性";
+"tools.refresh" = "刷新";
+"tools.query" = "查询";
+"tools.querying" = "查询中...";
+"tools.testing" = "测试中...";
+"tools.test" = "测试";
+"tools.stop" = "停止";
+"tools.cancel" = "取消";
+"tools.start" = "开始";
+
+// Tool inputs
+"input.ip_or_domain" = "输入 IP 或域名";
+"input.domain" = "输入域名";
+"input.ip" = "输入 IP";
+"input.host" = "主机";
+"input.port" = "端口";
+"input.target" = "输入目标域名或 IP";
+
+// Results
+"result.ip" = "IP";
+"result.location" = "位置";
+"result.isp" = "运营商";
+"result.resolved_ip" = "解析 IP";
+"result.outgoing_interface" = "出口网卡";
+"result.matched_vpn" = "对应 VPN";
+"result.no_match" = "未匹配到已配置的 VPN";
+"result.query_failed" = "查询失败";
+"result.query_failed_network" = "查询失败，请检查网络连接";
+"result.no_route_info" = "未找到路由信息";
+"result.click_refresh" = "点击刷新按钮加载路由表";
+"result.no_matching_routes" = "无匹配的路由";
+"result.loading" = "加载中...";
+"result.port_open" = "端口 %@ 开放";
+"result.port_unreachable" = "端口 %@ 不可达";
+"result.port_timeout" = "连接超时";
+"result.invalid_port" = "无效的端口号";
+"result.packet_loss" = "丢包率";
+"result.avg_latency" = "平均延迟";
+
+// Traceroute
+"traceroute.vpn_warning" = "VPN 连接时可能无法正常追踪";
+
+// Common ports
+"port.ssh" = "SSH";
+"port.http" = "HTTP";
+"port.https" = "HTTPS";
+"port.mysql" = "MySQL";
+"port.redis" = "Redis";
+"port.mongo" = "Mongo";
+
+// Settings
+"settings.title" = "设置";
+"settings.background_service" = "后台服务";
+"settings.background_service_desc" = "VPN 连接时自动添加路由，退出应用后仍生效";
+"settings.app_settings" = "应用设置";
+"settings.launch_at_login" = "开机启动";
+"settings.appearance" = "外观";
+"settings.theme" = "主题";
+"settings.about" = "关于";
+"settings.version" = "版本";
+"settings.language" = "语言";
+
+// Theme
+"theme.light" = "浅色";
+"theme.dark" = "深色";
+"theme.system" = "跟随系统";
+
+// Language
+"language.chinese" = "中文";
+"language.english" = "English";
+"language.system" = "跟随系统";
+
+// Logs
+"logs.title" = "操作日志";
+"logs.count" = "%d 条";
+"logs.clear" = "清除";
+"logs.no_logs" = "暂无日志";
+"logs.no_vpn" = "VPN 未连接";
+
+// Toast
+"toast.success" = "成功";
+"toast.error" = "错误";
+"toast.warning" = "警告";
+
+// Buttons
+"btn.ok" = "确定";
+"btn.cancel" = "取消";
+"btn.save" = "保存";
+"btn.delete" = "删除";
+"btn.edit" = "编辑";
+"btn.show" = "显示";
+"btn.hide" = "隐藏";
+"btn.enable" = "启用";
+"btn.disable" = "禁用";
+"btn.exit" = "退出";
+"btn.hide_vpn" = "隐藏此 VPN";
+
+// Errors
+"error.operation_failed" = "操作失败";
+"error.permission_denied" = "权限不足";
+"error.network_error" = "网络错误";
+"error.daemon_not_found" = "找不到守护进程可执行文件，请重新安装应用";
+"error.install_failed" = "安装失败: %@";
+"error.plist_failed" = "创建 plist 文件失败: %@";
+"error.launchagent_load_failed" = "加载 LaunchAgent 失败";
+"error.launchctl_failed" = "执行 launchctl 失败: %@";
+"error.uninstall_failed" = "卸载失败: %@";
+"error.plist_not_exist" = "LaunchAgent plist 不存在";
+"error.unknown" = "未知错误";
+"error.query_format" = "查询失败: %@";
+
+// Status
+"status.processing" = "处理中...";
+"status.configuring" = "配置中...";
+"status.install_failed" = "安装失败";

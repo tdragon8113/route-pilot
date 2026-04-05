@@ -8,15 +8,17 @@ import SwiftUI
 /// 路由表组件
 struct RouteTableView: View {
     @State private var routeEntries: [RouteEntry] = []
-    @State private var routeFilterInterface: String = "全部"
+    @State private var routeFilterInterface: String = ""
     @State private var routeFilterIP: String = ""
-    @State private var availableInterfaces: [String] = ["全部"]
+    @State private var availableInterfaces: [String] = []
     @State private var isLoadingRoutes = false
+
+    private var allInterfacesKey: String { "route.all_interfaces".localized }
 
     private var displayedRoutes: [RouteEntry] {
         var result = routeEntries
 
-        if !routeFilterInterface.isEmpty && routeFilterInterface != "全部" {
+        if !routeFilterInterface.isEmpty && routeFilterInterface != allInterfacesKey {
             result = result.filter { $0.interface == routeFilterInterface }
         }
 
@@ -27,10 +29,14 @@ struct RouteTableView: View {
         return result
     }
 
+    private var interfaceButtons: [String] {
+        [allInterfacesKey] + availableInterfaces
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("路由表")
+                Text("tools.route_table".localized)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
@@ -46,10 +52,10 @@ struct RouteTableView: View {
             // 接口过滤
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    ForEach(availableInterfaces, id: \.self) { iface in
+                    ForEach(interfaceButtons, id: \.self) { iface in
                         QuickButton(
                             title: iface,
-                            isSelected: routeFilterInterface == iface
+                            isSelected: routeFilterInterface == iface || (routeFilterInterface.isEmpty && iface == allInterfacesKey)
                         ) {
                             routeFilterInterface = iface
                         }
@@ -57,23 +63,23 @@ struct RouteTableView: View {
                 }
             }
 
-            ClearableTextField(placeholder: "IP 过滤", text: $routeFilterIP)
+            ClearableTextField(placeholder: "result.ip".localized + " " + "tools.query".localized, text: $routeFilterIP)
 
             if isLoadingRoutes {
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("加载中...")
+                    Text("result.loading".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             } else if routeEntries.isEmpty {
-                Text("点击刷新按钮加载路由表")
+                Text("result.click_refresh".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
             } else if displayedRoutes.isEmpty {
-                Text("无匹配的路由")
+                Text("result.no_matching_routes".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -82,15 +88,15 @@ struct RouteTableView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
-                            Text("目标")
+                            Text("route.destination".localized)
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .frame(width: 100, alignment: .leading)
-                            Text("网关")
+                            Text("route.gateway".localized)
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .frame(width: 80, alignment: .leading)
-                            Text("接口")
+                            Text("route.interface".localized)
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .frame(width: 50, alignment: .leading)
@@ -119,7 +125,7 @@ struct RouteTableView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 
@@ -169,8 +175,8 @@ struct RouteTableView: View {
 
                 await MainActor.run {
                     self.routeEntries = entries
-                    self.availableInterfaces = ["全部"] + interfaces.sorted()
-                    self.routeFilterInterface = "全部"
+                    self.availableInterfaces = interfaces.sorted()
+                    self.routeFilterInterface = ""
                     self.isLoadingRoutes = false
                 }
             } catch {

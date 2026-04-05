@@ -22,21 +22,21 @@ struct RouteQueryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("路由查询")
+            Text("tools.route_query".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            Text("查询 IP 或域名走哪个网卡出口")
+            Text("tools.route_query_desc".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
             HStack {
-                ClearableTextField(placeholder: "输入 IP 或域名", text: $debugInput)
+                ClearableTextField(placeholder: "input.ip_or_domain".localized, text: $debugInput)
                     .onSubmit {
                         runDebugQuery()
                     }
 
-                Button("查询") {
+                Button("tools.query".localized) {
                     runDebugQuery()
                 }
                 .buttonStyle(.borderedProminent)
@@ -47,7 +47,7 @@ struct RouteQueryView: View {
             if isDebugging {
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("查询中...")
+                    Text("tools.querying".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -57,7 +57,7 @@ struct RouteQueryView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     if let ip = result.resolvedIP {
                         HStack {
-                            Text("解析 IP:")
+                            Text("result.resolved_ip".localized + ":")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Text(ip)
@@ -67,7 +67,7 @@ struct RouteQueryView: View {
                     }
 
                     HStack {
-                        Text("出口网卡:")
+                        Text("result.outgoing_interface".localized + ":")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Text(result.interface)
@@ -78,7 +78,7 @@ struct RouteQueryView: View {
 
                     if let vpn = result.matchedVPN {
                         HStack {
-                            Text("对应 VPN:")
+                            Text("result.matched_vpn".localized + ":")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Text(vpn)
@@ -88,10 +88,10 @@ struct RouteQueryView: View {
                         }
                     } else if result.interface.hasPrefix("ppp") || result.interface.hasPrefix("utun") {
                         HStack {
-                            Text("对应 VPN:")
+                            Text("result.matched_vpn".localized + ":")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text("未匹配到已配置的 VPN")
+                            Text("result.no_match".localized)
                                 .font(.caption)
                                 .foregroundColor(.orange)
                         }
@@ -101,7 +101,7 @@ struct RouteQueryView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.cardBackground)
                 )
             }
 
@@ -114,7 +114,7 @@ struct RouteQueryView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 
@@ -153,14 +153,14 @@ struct RouteQueryView: View {
                     } else {
                         await MainActor.run {
                             isDebugging = false
-                            debugError = "无法解析域名"
+                            debugError = "result.query_failed".localized
                         }
                         return
                     }
                 } catch {
                     await MainActor.run {
                         isDebugging = false
-                        debugError = "域名解析失败"
+                        debugError = "result.query_failed".localized
                     }
                     return
                 }
@@ -204,13 +204,13 @@ struct RouteQueryView: View {
                             matchedVPN: matchedVPN
                         )
                     } else {
-                        debugError = "未找到路由信息"
+                        debugError = "result.no_route_info".localized
                     }
                 }
             } catch {
                 await MainActor.run {
                     isDebugging = false
-                    debugError = "查询失败: \(error.localizedDescription)"
+                    debugError = String(format: "error.query_format".localized, error.localizedDescription)
                 }
             }
         }

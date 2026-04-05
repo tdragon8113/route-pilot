@@ -13,11 +13,12 @@ struct CurrentRoutesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("接口: \(vpnStatus?.interface ?? "未连接")")
+                let interfaceText = vpnStatus?.interface ?? "logs.no_vpn".localized
+                Text("route.interface".localized + ": \(interfaceText)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
-                Button("刷新") {
+                Button("tools.refresh".localized) {
                     if let iface = vpnStatus?.interface {
                         app.fetchCurrentRoutes(interface: iface)
                     }
@@ -27,11 +28,11 @@ struct CurrentRoutesView: View {
             }
 
             if vpnStatus == nil {
-                emptyState("VPN 未连接")
+                emptyState("logs.no_vpn".localized)
             } else if app.isLoadingRoutes {
                 loadingState
             } else if app.currentRoutes.isEmpty {
-                emptyState("无路由")
+                emptyState("route.no_routes".localized)
             } else {
                 routesList
             }
@@ -39,15 +40,15 @@ struct CurrentRoutesView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
         .onAppear {
             if let iface = vpnStatus?.interface {
                 app.fetchCurrentRoutes(interface: iface)
             }
         }
-        .onChange(of: vpnStatus) { newValue in
-            if let iface = newValue?.interface {
+        .onChange(of: vpnStatus) {
+            if let iface = vpnStatus?.interface {
                 app.fetchCurrentRoutes(interface: iface)
             } else {
                 app.currentRoutes = []

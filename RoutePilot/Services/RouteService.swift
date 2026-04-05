@@ -55,7 +55,7 @@ actor RouteService {
         let validRoutes = resolvedRoutes.filter { !$0.destination.contains("/") || $0.destination == $0.original }
 
         guard !validRoutes.isEmpty else {
-            return (false, "所有域名解析失败")
+            return (false, String.localizedStatic("error.dns_all_failed"))
         }
 
         let passwordless = isPasswordlessConfigured
@@ -82,7 +82,7 @@ actor RouteService {
             let script = "do shell script \"\(combinedCommand)\" with administrator privileges"
             let success = await ShellRunner.shared.runAppleScript(script)
 
-            return (success, success ? nil : "授权被取消或执行失败")
+            return (success, success ? nil : String.localizedStatic("error.auth_cancelled"))
         }
     }
 

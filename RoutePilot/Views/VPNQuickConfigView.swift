@@ -75,7 +75,7 @@ struct VPNQuickConfigView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.caption)
-                    Text("已连接")
+                    Text("vpn.connected".localized)
                         .font(.caption)
                         .foregroundColor(.green)
                     if let iface = vpnStatus?.interface {
@@ -88,7 +88,7 @@ struct VPNQuickConfigView: View {
                 Spacer()
 
                 if isActiveVPN {
-                    Button("查看路由") {
+                    Button("route.view_routes".localized) {
                         if let iface = vpnStatus?.interface {
                             app.fetchCurrentRoutes(interface: iface)
                         }
@@ -135,9 +135,9 @@ struct VPNQuickConfigView: View {
             // 添加新路由
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    ClearableTextField(placeholder: "目标地址 (如 10.0.0.0/8 或 github.com)", text: $newRoute)
+                    ClearableTextField(placeholder: "route.add_placeholder".localized, text: $newRoute)
 
-                    Button("添加") {
+                    Button("route.add".localized.components(separatedBy: " ").first ?? "route.add".localized) {
                         if !newRoute.isEmpty {
                             app.addRoute(newRoute, note: newNote.isEmpty ? nil : newNote, to: vpnName)
                             newRoute = ""
@@ -149,7 +149,7 @@ struct VPNQuickConfigView: View {
                     .disabled(newRoute.isEmpty)
                 }
 
-                ClearableTextField(placeholder: "备注 (可选)", text: $newNote)
+                ClearableTextField(placeholder: "route.note_placeholder".localized, text: $newNote)
                     .font(.caption)
             }
 
@@ -159,7 +159,7 @@ struct VPNQuickConfigView: View {
                     Button(action: {
                         app.addRoutes(for: vpnName)
                     }) {
-                        Label("添加路由", systemImage: "plus.circle")
+                        Label("route.add".localized, systemImage: "plus.circle")
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -168,7 +168,7 @@ struct VPNQuickConfigView: View {
                     Button(action: {
                         app.removeRoutes(for: vpnName)
                     }) {
-                        Label("清理路由", systemImage: "minus.circle")
+                        Label("route.clear".localized, systemImage: "minus.circle")
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -240,19 +240,19 @@ struct RouteRowView: View {
             .buttonStyle(.borderless)
             .popover(isPresented: $isEditing) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("编辑备注")
+                    Text("route.edit_note".localized)
                         .font(.headline)
 
-                    ClearableTextField(placeholder: "备注", text: $editingNote, width: 200)
+                    ClearableTextField(placeholder: "route.note".localized, text: $editingNote, width: 200)
 
                     HStack {
-                        Button("取消") {
+                        Button("btn.cancel".localized) {
                             isEditing = false
                         }
 
                         Spacer()
 
-                        Button("保存") {
+                        Button("btn.save".localized) {
                             app.updateNote(editingNote.isEmpty ? nil : editingNote, for: route, in: vpnName)
                             isEditing = false
                         }

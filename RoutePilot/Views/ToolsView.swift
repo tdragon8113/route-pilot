@@ -18,7 +18,7 @@ struct ToolsView: View {
                 }
                 .buttonStyle(.borderless)
 
-                Text("工具")
+                Text("tools.title".localized)
                     .font(.headline)
 
                 Spacer()

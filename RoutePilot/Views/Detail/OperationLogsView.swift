@@ -17,11 +17,11 @@ struct OperationLogsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("共 \(vpnLogs.count) 条")
+                Text("logs.count".localized.localized(with: vpnLogs.count))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
-                Button("清除") {
+                Button("logs.clear".localized) {
                     app.clearLogs()
                 }
                 .controlSize(.small)
@@ -30,7 +30,7 @@ struct OperationLogsView: View {
             if vpnLogs.isEmpty {
                 VStack {
                     Spacer()
-                    Text("暂无日志")
+                    Text("logs.no_logs".localized)
                         .foregroundColor(.secondary)
                     Spacer()
                 }
@@ -57,7 +57,7 @@ struct OperationLogsView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 }

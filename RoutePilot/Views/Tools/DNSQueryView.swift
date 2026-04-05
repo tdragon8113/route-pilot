@@ -14,22 +14,22 @@ struct DNSQueryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("DNS 查询")
+            Text("tools.dns".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            Text("查询域名解析记录")
+            Text("tools.dns_desc".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
             HStack {
-                ClearableTextField(placeholder: "输入域名", text: $dnsTarget)
+                ClearableTextField(placeholder: "input.domain".localized, text: $dnsTarget)
                     .disabled(isQueryingDNS)
                     .onSubmit {
                         queryDNS()
                     }
 
-                Button(isQueryingDNS ? "查询中..." : "查询") {
+                Button(isQueryingDNS ? "tools.querying".localized : "tools.query".localized) {
                     queryDNS()
                 }
                 .buttonStyle(.borderedProminent)
@@ -55,7 +55,7 @@ struct DNSQueryView: View {
                 .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.cardBackground)
                 )
             }
 
@@ -68,7 +68,7 @@ struct DNSQueryView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 
@@ -118,7 +118,7 @@ struct DNSQueryView: View {
             } catch {
                 await MainActor.run {
                     isQueryingDNS = false
-                    dnsError = "查询失败"
+                    dnsError = "result.query_failed".localized
                 }
             }
         }

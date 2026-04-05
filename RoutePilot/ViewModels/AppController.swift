@@ -125,7 +125,7 @@ class AppController: ObservableObject {
         if let config = vpnConfigs.first(where: { $0.name == vpnName }),
            config.routes.contains(where: { $0.destination == destination }) {
             log("路由规则已存在: \(destination)", level: .warning, vpnName: vpnName)
-            showToast("路由规则已存在", type: .warning)
+            showToast("route.duplicate".localized, type: .warning)
             return
         }
 
@@ -156,7 +156,8 @@ class AppController: ObservableObject {
     func setVPNEnabled(_ vpnName: String, enabled: Bool) {
         updateVPNConfig(vpnName) { $0.enabled = enabled }
         updateMenuBarStatus()
-        showToast(enabled ? "已启用 \(vpnName)" : "已禁用 \(vpnName)", type: .success)
+        let message = enabled ? "vpn.enabled".localized : "vpn.disabled".localized
+        showToast(message, type: .success)
     }
 
     /// 更新菜单栏图标状态
@@ -207,7 +208,7 @@ class AppController: ObservableObject {
                 config.routes[routeIndex].enabled = enabled
             }
         }
-        showToast(enabled ? "已启用路由" : "已禁用路由", type: .success)
+        showToast(enabled ? "route.enabled".localized : "route.disabled".localized, type: .success)
     }
 
     func updateNote(_ note: String?, for route: RouteItem, in vpnName: String) {

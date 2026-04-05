@@ -124,8 +124,8 @@ ps aux | grep route-pilot-daemon
 tail -f ~/Library/Logs/RoutePilot/daemon.log
 
 # 手动控制守护进程
-launchctl load ~/Library/LaunchAgents/com.tangda.RoutePilotDaemon.plist
-launchctl unload ~/Library/LaunchAgents/com.tangda.RoutePilotDaemon.plist
+launchctl load ~/Library/LaunchAgents/com.sunny.RoutePilotDaemon.plist
+launchctl unload ~/Library/LaunchAgents/com.sunny.RoutePilotDaemon.plist
 ```
 
 ## 发布流程

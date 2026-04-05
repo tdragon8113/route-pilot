@@ -14,9 +14,9 @@ struct BackgroundServiceSection: View {
     @State private var isSettingUp = false
 
     var body: some View {
-        SettingsSection(title: "后台服务", icon: "server.rack") {
+        SettingsSection(title: "settings.background_service".localized, icon: "server.rack") {
             VStack(alignment: .leading, spacing: 8) {
-                Text("VPN 连接时自动添加路由，退出应用后仍生效")
+                Text("settings.background_service_desc".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -44,7 +44,7 @@ struct BackgroundServiceSection: View {
             HStack(spacing: 4) {
                 Image(systemName: "info.circle")
                     .foregroundColor(.blue)
-                Text("点击下方按钮，自动完成配置")
+                Text("service.setup_hint".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -54,10 +54,10 @@ struct BackgroundServiceSection: View {
                     if isSettingUp {
                         ProgressView()
                             .controlSize(.small)
-                        Text("配置中...")
+                        Text("service.enabling".localized)
                     } else {
                         Image(systemName: "power")
-                        Text("启用后台服务")
+                        Text("service.enable".localized)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -66,7 +66,7 @@ struct BackgroundServiceSection: View {
             .controlSize(.regular)
             .disabled(isSettingUp)
 
-            Text("将自动配置免密授权并安装守护进程")
+            Text("service.setup_desc".localized)
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
@@ -83,7 +83,7 @@ struct BackgroundServiceSection: View {
             HStack(spacing: 4) {
                 Image(systemName: daemonRunning ? "checkmark.circle.fill" : "pause.circle.fill")
                     .foregroundColor(daemonRunning ? .green : .orange)
-                Text(daemonRunning ? "运行中" : "已停止")
+                Text(daemonRunning ? "service.running".localized : "service.stopped".localized)
                     .font(.caption)
                     .foregroundColor(daemonRunning ? .green : .orange)
             }
@@ -91,20 +91,20 @@ struct BackgroundServiceSection: View {
             Spacer()
 
             if daemonRunning {
-                Button("停止") {
+                Button("service.stop".localized) {
                     stopDaemon()
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             } else {
-                Button("启动") {
+                Button("service.start".localized) {
                     startDaemon()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
             }
 
-            Button("卸载", role: .destructive) {
+            Button("service.uninstall".localized, role: .destructive) {
                 uninstallDaemon()
             }
             .buttonStyle(.bordered)
@@ -116,7 +116,7 @@ struct BackgroundServiceSection: View {
                 Image(systemName: "checkmark.circle")
                     .foregroundColor(.green)
                     .font(.caption2)
-                Text("免密授权已配置")
+                Text("service.passwordless_configured".localized)
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -139,10 +139,10 @@ struct BackgroundServiceSection: View {
                 if result.0 {
                     app.passwordlessConfigured = true
                     checkDaemonStatus()
-                    app.showToast("后台服务已启用", type: .success)
+                    app.showToast("service.enabled".localized, type: .success)
                 } else {
-                    daemonError = result.1 ?? "安装失败"
-                    app.showToast("启用失败", type: .error)
+                    daemonError = result.1 ?? "error.operation_failed".localized
+                    app.showToast("toast.error".localized, type: .error)
                 }
             }
         }
@@ -154,10 +154,10 @@ struct BackgroundServiceSection: View {
         if result.0 {
             checkDaemonStatus()
             app.passwordlessConfigured = false
-            app.showToast("后台服务已卸载", type: .success)
+            app.showToast("service.disabled".localized, type: .success)
         } else {
-            daemonError = result.1 ?? "卸载失败"
-            app.showToast("卸载失败", type: .error)
+            daemonError = result.1 ?? "error.operation_failed".localized
+            app.showToast("toast.error".localized, type: .error)
         }
     }
 
@@ -166,10 +166,10 @@ struct BackgroundServiceSection: View {
         let result = DaemonManager.start()
         if result.0 {
             checkDaemonStatus()
-            app.showToast("后台服务已启动", type: .success)
+            app.showToast("service.running".localized, type: .success)
         } else {
-            daemonError = result.1 ?? "启动失败"
-            app.showToast("启动失败", type: .error)
+            daemonError = result.1 ?? "error.operation_failed".localized
+            app.showToast("toast.error".localized, type: .error)
         }
     }
 
@@ -178,10 +178,10 @@ struct BackgroundServiceSection: View {
         let result = DaemonManager.stop()
         if result.0 {
             checkDaemonStatus()
-            app.showToast("后台服务已停止", type: .success)
+            app.showToast("service.stopped".localized, type: .success)
         } else {
-            daemonError = result.1 ?? "停止失败"
-            app.showToast("停止失败", type: .error)
+            daemonError = result.1 ?? "error.operation_failed".localized
+            app.showToast("toast.error".localized, type: .error)
         }
     }
 }

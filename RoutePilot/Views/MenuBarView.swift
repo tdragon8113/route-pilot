@@ -8,6 +8,7 @@ import SwiftUI
 /// 菜单栏主容器视图
 struct MenuBarView: View {
     @ObservedObject private var app = AppController.shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var selectedVPN: String?
     @State private var newRoute = ""
     @State private var showDetailView: Bool = false
@@ -38,6 +39,7 @@ struct MenuBarView: View {
                 )
             }
         }
+        .id(localization.currentLanguage)
         .padding()
         .frame(width: 280)
         .frame(maxHeight: showTools ? 700 : nil)

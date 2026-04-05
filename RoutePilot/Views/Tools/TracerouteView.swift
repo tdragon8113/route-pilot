@@ -16,11 +16,11 @@ struct TracerouteView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("路由追踪")
+            Text("tools.traceroute".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            Text("追踪到目标的网络路径")
+            Text("tools.traceroute_desc".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -29,24 +29,24 @@ struct TracerouteView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
-                    Text("VPN 连接时可能无法正常追踪")
+                    Text("traceroute.vpn_warning".localized)
                         .font(.caption)
                         .foregroundColor(.orange)
                 }
             }
 
             HStack {
-                ClearableTextField(placeholder: "输入目标域名或 IP", text: $tracerouteTarget)
+                ClearableTextField(placeholder: "input.target".localized, text: $tracerouteTarget)
                     .disabled(isTracing)
 
                 if isTracing {
-                    Button("取消") {
+                    Button("tools.cancel".localized) {
                         stopTraceroute()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 } else {
-                    Button("追踪") {
+                    Button("tools.start".localized) {
                         startTraceroute()
                     }
                     .buttonStyle(.borderedProminent)
@@ -88,7 +88,7 @@ struct TracerouteView: View {
                 .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.cardBackground)
                 )
             }
 
@@ -101,7 +101,7 @@ struct TracerouteView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 
@@ -143,7 +143,7 @@ struct TracerouteView: View {
             }
         } catch {
             isTracing = false
-            tracerouteError = "启动失败"
+            tracerouteError = "error.operation_failed".localized
         }
     }
 

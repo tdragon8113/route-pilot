@@ -13,25 +13,25 @@ struct PublicIPView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("公网 IP 查询")
+            Text("tools.public_ip".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            Text("查询当前公网 IP 及地理位置")
+            Text("tools.public_ip_desc".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
             if isQueryingIP {
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("查询中...")
+                    Text("tools.querying".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             } else if let info = publicIPInfo {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("IP:")
+                        Text("result.ip".localized + ":")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Text(info.query)
@@ -39,7 +39,7 @@ struct PublicIPView: View {
                             .fontWeight(.medium)
                     }
                     HStack {
-                        Text("位置:")
+                        Text("result.location".localized + ":")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Text("\(info.country), \(info.city)")
@@ -47,7 +47,7 @@ struct PublicIPView: View {
                             .fontWeight(.medium)
                     }
                     HStack {
-                        Text("运营商:")
+                        Text("result.isp".localized + ":")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Text(info.isp)
@@ -59,7 +59,7 @@ struct PublicIPView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.cardBackground)
                 )
             }
 
@@ -69,7 +69,7 @@ struct PublicIPView: View {
                     .foregroundColor(.red)
             }
 
-            Button(isQueryingIP ? "查询中..." : "查询") {
+            Button(isQueryingIP ? "tools.querying".localized : "tools.query".localized) {
                 queryPublicIP()
             }
             .buttonStyle(.borderedProminent)
@@ -79,7 +79,7 @@ struct PublicIPView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 
@@ -105,13 +105,13 @@ struct PublicIPView: View {
                             query: ip
                         )
                     } else {
-                        ipQueryError = "查询失败"
+                        ipQueryError = "result.query_failed".localized
                     }
                 }
             } catch {
                 await MainActor.run {
                     isQueryingIP = false
-                    ipQueryError = "查询失败，请检查网络连接"
+                    ipQueryError = "result.query_failed_network".localized
                 }
             }
         }

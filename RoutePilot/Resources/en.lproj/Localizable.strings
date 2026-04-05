@@ -1,0 +1,190 @@
+/*
+  Localizable.strings (English)
+  RoutePilot
+*/
+
+// App
+"app.name" = "Route Pilot";
+
+// Tab titles
+"tab.vpn_list" = "VPN List";
+"tab.tools" = "Tools";
+"tab.settings" = "Settings";
+"tab.current_routes" = "Current Routes";
+"tab.operation_logs" = "Operation Logs";
+
+// VPN
+"vpn.list" = "VPN List";
+"vpn.not_detected" = "No VPN Detected";
+"vpn.connected" = "Connected";
+"vpn.disconnected" = "Disconnected";
+"vpn.disabled" = "Disabled";
+"vpn.hidden" = "Hidden (%d)";
+"vpn.enabled" = "Enabled";
+
+// Routes
+"route.destination" = "Destination";
+"route.gateway" = "Gateway";
+"route.interface" = "Interface";
+"route.note" = "Note";
+"route.note_placeholder" = "Note (optional)";
+"route.add_placeholder" = "Destination (e.g., 10.0.0.0/8 or github.com)";
+"route.add" = "Add Route";
+"route.remove" = "Remove Route";
+"route.clear" = "Clear Routes";
+"route.view_routes" = "View Routes";
+"route.no_routes" = "No Routes";
+"route.duplicate" = "Route already exists";
+"route.all_interfaces" = "All";
+"route.edit_note" = "Edit Note";
+"route.count_unit" = "routes";
+"route.enabled" = "Route enabled";
+"route.disabled" = "Route disabled";
+
+// Background Service
+"service.not_enabled" = "Background Service Not Enabled";
+"service.not_enabled_desc" = "Routes cannot be auto-added when VPN connects";
+"service.enable" = "Enable";
+"service.enabling" = "Enabling...";
+"service.installed" = "Installed";
+"service.running" = "Running";
+"service.stopped" = "Stopped";
+"service.start" = "Start";
+"service.stop" = "Stop";
+"service.uninstall" = "Uninstall";
+"service.passwordless_configured" = "Passwordless authorization configured";
+"service.enabled" = "Background service enabled";
+"service.disabled" = "Background service disabled";
+"service.setup_hint" = "Click the button below to auto-configure";
+"service.setup_desc" = "Will auto-configure passwordless sudo and install daemon";
+
+// Tools
+"tools.title" = "Tools";
+"tools.public_ip" = "Public IP Query";
+"tools.public_ip_desc" = "Query current public IP and location";
+"tools.route_query" = "Route Query";
+"tools.route_query_desc" = "Query which interface an IP or domain uses";
+"tools.route_table" = "Route Table";
+"tools.route_table_desc" = "View system route table";
+"tools.traceroute" = "Traceroute";
+"tools.traceroute_desc" = "Trace network path to destination";
+"tools.ping" = "Ping Test";
+"tools.ping_desc" = "Test network connectivity";
+"tools.dns" = "DNS Query";
+"tools.dns_desc" = "Query DNS records";
+"tools.port" = "Port Test";
+"tools.port_desc" = "Test TCP port connectivity";
+"tools.refresh" = "Refresh";
+"tools.query" = "Query";
+"tools.querying" = "Querying...";
+"tools.testing" = "Testing...";
+"tools.test" = "Test";
+"tools.stop" = "Stop";
+"tools.cancel" = "Cancel";
+"tools.start" = "Start";
+
+// Tool inputs
+"input.ip_or_domain" = "Enter IP or domain";
+"input.domain" = "Enter domain";
+"input.ip" = "Enter IP";
+"input.host" = "Host";
+"input.port" = "Port";
+"input.target" = "Enter target domain or IP";
+
+// Results
+"result.ip" = "IP";
+"result.location" = "Location";
+"result.isp" = "ISP";
+"result.resolved_ip" = "Resolved IP";
+"result.outgoing_interface" = "Outgoing Interface";
+"result.matched_vpn" = "Matched VPN";
+"result.no_match" = "No matching VPN found";
+"result.query_failed" = "Query failed";
+"result.query_failed_network" = "Query failed, please check network";
+"result.no_route_info" = "No route info found";
+"result.click_refresh" = "Click refresh button to load route table";
+"result.no_matching_routes" = "No matching routes";
+"result.loading" = "Loading...";
+"result.port_open" = "Port %@ open";
+"result.port_unreachable" = "Port %@ unreachable";
+"result.port_timeout" = "Connection timeout";
+"result.invalid_port" = "Invalid port number";
+"result.packet_loss" = "Packet Loss";
+"result.avg_latency" = "Avg Latency";
+
+// Traceroute
+"traceroute.vpn_warning" = "May not work properly when VPN is connected";
+
+// Common ports
+"port.ssh" = "SSH";
+"port.http" = "HTTP";
+"port.https" = "HTTPS";
+"port.mysql" = "MySQL";
+"port.redis" = "Redis";
+"port.mongo" = "Mongo";
+
+// Settings
+"settings.title" = "Settings";
+"settings.background_service" = "Background Service";
+"settings.background_service_desc" = "Auto-add routes when VPN connects, works after app exit";
+"settings.app_settings" = "App Settings";
+"settings.launch_at_login" = "Launch at Login";
+"settings.appearance" = "Appearance";
+"settings.theme" = "Theme";
+"settings.about" = "About";
+"settings.version" = "Version";
+"settings.language" = "Language";
+
+// Theme
+"theme.light" = "Light";
+"theme.dark" = "Dark";
+"theme.system" = "System";
+
+// Language
+"language.chinese" = "Chinese";
+"language.english" = "English";
+"language.system" = "System";
+
+// Logs
+"logs.title" = "Operation Logs";
+"logs.count" = "%d entries";
+"logs.clear" = "Clear";
+"logs.no_logs" = "No logs";
+"logs.no_vpn" = "VPN not connected";
+
+// Toast
+"toast.success" = "Success";
+"toast.error" = "Error";
+"toast.warning" = "Warning";
+
+// Buttons
+"btn.ok" = "OK";
+"btn.cancel" = "Cancel";
+"btn.save" = "Save";
+"btn.delete" = "Delete";
+"btn.edit" = "Edit";
+"btn.show" = "Show";
+"btn.hide" = "Hide";
+"btn.enable" = "Enable";
+"btn.disable" = "Disable";
+"btn.exit" = "Exit";
+"btn.hide_vpn" = "Hide this VPN";
+
+// Errors
+"error.operation_failed" = "Operation failed";
+"error.permission_denied" = "Permission denied";
+"error.network_error" = "Network error";
+"error.daemon_not_found" = "Daemon executable not found, please reinstall the app";
+"error.install_failed" = "Installation failed: %@";
+"error.plist_failed" = "Failed to create plist file: %@";
+"error.launchagent_load_failed" = "Failed to load LaunchAgent";
+"error.launchctl_failed" = "Failed to execute launchctl: %@";
+"error.uninstall_failed" = "Uninstall failed: %@";
+"error.plist_not_exist" = "LaunchAgent plist does not exist";
+"error.unknown" = "Unknown error";
+"error.query_format" = "Query failed: %@";
+
+// Status
+"status.processing" = "Processing...";
+"status.configuring" = "Configuring...";
+"status.install_failed" = "Installation failed";

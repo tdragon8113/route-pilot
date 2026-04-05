@@ -32,10 +32,10 @@ struct MainView: View {
                 isInstalling = false
                 if result.0 {
                     app.passwordlessConfigured = true
-                    app.showToast("后台服务已启用", type: .success)
+                    app.showToast("service.enabled".localized, type: .success)
                 } else {
-                    installError = result.1 ?? "安装失败"
-                    app.showToast("启用失败", type: .error)
+                    installError = result.1 ?? "status.install_failed".localized
+                    app.showToast("toast.error".localized, type: .error)
                 }
             }
         }
@@ -49,14 +49,14 @@ struct MainView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("后台服务未启用")
+                        Text("service.not_enabled".localized)
                             .font(.caption)
                         if let error = installError {
                             Text(error)
                                 .font(.caption2)
                                 .foregroundColor(.red)
                         } else {
-                            Text("VPN 连接时无法自动添加路由")
+                            Text("service.not_enabled_desc".localized)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -66,7 +66,7 @@ struct MainView: View {
                         ProgressView()
                             .controlSize(.small)
                     } else {
-                        Button("启用") {
+                        Button("service.enable".localized) {
                             installBackgroundService()
                         }
                         .buttonStyle(.borderedProminent)
@@ -82,7 +82,7 @@ struct MainView: View {
             }
 
             // VPN 列表
-            Text("VPN 列表")
+            Text("vpn.list".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -91,7 +91,7 @@ struct MainView: View {
                     Image(systemName: "vpn.slash")
                         .font(.system(size: 24))
                         .foregroundColor(.gray)
-                    Text("未检测到 VPN")
+                    Text("vpn.not_detected".localized)
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -120,7 +120,7 @@ struct MainView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Button("显示") {
+                                Button("btn.show".localized) {
                                     app.showVPN(config.name)
                                 }
                                 .buttonStyle(.bordered)
@@ -134,7 +134,7 @@ struct MainView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "eye.slash")
                             .font(.caption2)
-                        Text("已隐藏 (\(hiddenVPNs.count))")
+                        Text("vpn.hidden".localized.localized(with: hiddenVPNs.count))
                             .font(.caption)
                     }
                     .foregroundColor(.secondary)
@@ -177,7 +177,7 @@ struct MainView: View {
                 HStack {
                     Spacer()
                     ProgressView().controlSize(.small)
-                    Text(app.isConfiguring ? "配置中..." : "处理中...")
+                    Text(app.isConfiguring ? "status.configuring".localized : "status.processing".localized)
                         .font(.caption)
                     Spacer()
                 }
@@ -188,14 +188,14 @@ struct MainView: View {
                 Divider()
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("操作日志")
+                        Text("logs.title".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(app.logs.count) 条")
+                        Text("logs.count".localized.localized(with: app.logs.count))
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        Button("查看") {
+                        Button("route.view_routes".localized) {
                             detailInitialTab = 1
                             showDetailView = true
                         }
@@ -226,17 +226,17 @@ struct MainView: View {
                     Image(systemName: "gearshape")
                 }
                 .buttonStyle(.borderless)
-                .help("设置")
+                .help("settings.title".localized)
 
                 Button(action: { showTools = true }) {
                     Image(systemName: "wrench.and.screwdriver")
                 }
                 .buttonStyle(.borderless)
-                .help("工具")
+                .help("tools.title".localized)
 
                 Spacer()
 
-                Button("退出") {
+                Button("btn.exit".localized) {
                     NSApp.terminate(nil)
                 }
             }

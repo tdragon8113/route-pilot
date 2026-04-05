@@ -26,20 +26,20 @@ struct PortTestView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("端口测试")
+            Text("tools.port".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            Text("测试 TCP 端口连通性")
+            Text("tools.port_desc".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
             HStack {
-                ClearableTextField(placeholder: "主机", text: $portHost, width: 120)
+                ClearableTextField(placeholder: "input.host".localized, text: $portHost, width: 120)
 
-                ClearableTextField(placeholder: "端口", text: $portNumber, width: 60)
+                ClearableTextField(placeholder: "input.port".localized, text: $portNumber, width: 60)
 
-                Button(isTestingPort ? "测试中..." : "测试") {
+                Button(isTestingPort ? "tools.testing".localized : "tools.test".localized) {
                     testPort()
                 }
                 .buttonStyle(.borderedProminent)
@@ -78,7 +78,7 @@ struct PortTestView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 
@@ -90,7 +90,7 @@ struct PortTestView: View {
 
         let host = NWEndpoint.Host(portHost)
         guard let nwPort = NWEndpoint.Port(rawValue: port) else {
-            portResult = "✗ 无效的端口号"
+            portResult = "✗ " + "result.invalid_port".localized
             isTestingPort = false
             return
         }
@@ -104,11 +104,11 @@ struct PortTestView: View {
                 case .ready:
                     let elapsed = Date().timeIntervalSince(startTime) * 1000
                     self.connectTime = elapsed
-                    self.portResult = "✓ 端口 \(self.portNumber) 开放"
+                    self.portResult = "✓ " + String(format: "result.port_open".localized, self.portNumber)
                     self.isTestingPort = false
                     connection.cancel()
                 case .failed:
-                    self.portResult = "✗ 端口 \(self.portNumber) 不可达"
+                    self.portResult = "✗ " + String(format: "result.port_unreachable".localized, self.portNumber)
                     self.isTestingPort = false
                 default:
                     break
@@ -121,7 +121,7 @@ struct PortTestView: View {
         // 5 秒超时
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [self] in
             if isTestingPort {
-                portResult = "✗ 连接超时"
+                portResult = "✗ " + "result.port_timeout".localized
                 isTestingPort = false
                 connection.cancel()
             }

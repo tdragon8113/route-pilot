@@ -49,7 +49,7 @@ struct VPNRowView: View {
 
                     HStack(spacing: 4) {
                         if !config.enabled {
-                            Text("已禁用")
+                            Text("vpn.disabled".localized)
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .foregroundColor(.orange)
@@ -58,7 +58,7 @@ struct VPNRowView: View {
                                 .background(Color.orange.opacity(0.15))
                                 .cornerRadius(3)
                         } else if isConnected {
-                            Text("已连接")
+                            Text("vpn.connected".localized)
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .foregroundColor(.green)
@@ -69,7 +69,8 @@ struct VPNRowView: View {
                         }
 
                         if !config.routes.isEmpty {
-                            Text("\(config.routes.count) 条路由")
+                            let routeText = "\(config.routes.count) " + "route.count_unit".localized
+                            Text(routeText)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -86,7 +87,7 @@ struct VPNRowView: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(config.enabled)
-                .help(config.enabled ? "" : "隐藏此 VPN")
+                .help(config.enabled ? "" : "btn.hide".localized)
 
                 // 启用开关
                 Toggle("", isOn: Binding(
@@ -108,7 +109,7 @@ struct VPNRowView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contextMenu {
             Button(action: { app.hideVPN(config.name) }) {
-                Label("隐藏此 VPN", systemImage: "eye.slash")
+                Label("btn.hide_vpn".localized, systemImage: "eye.slash")
             }
         }
     }

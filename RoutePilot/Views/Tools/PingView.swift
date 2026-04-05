@@ -15,26 +15,26 @@ struct PingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Ping 测试")
+            Text("tools.ping".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            Text("测试网络连通性")
+            Text("tools.ping_desc".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
             HStack {
-                ClearableTextField(placeholder: "输入域名或 IP", text: $pingTarget)
+                ClearableTextField(placeholder: "input.target".localized, text: $pingTarget)
                     .disabled(isPinging)
 
                 if isPinging {
-                    Button("停止") {
+                    Button("tools.stop".localized) {
                         stopPing()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 } else {
-                    Button("测试") {
+                    Button("tools.test".localized) {
                         startPing()
                     }
                     .buttonStyle(.borderedProminent)
@@ -56,7 +56,7 @@ struct PingView: View {
                 .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.cardBackground)
                 )
             }
 
@@ -64,7 +64,7 @@ struct PingView: View {
             if let stats = pingStats {
                 HStack(spacing: 16) {
                     HStack(spacing: 4) {
-                        Text("丢包率:")
+                        Text("result.packet_loss".localized + ":")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text(stats.packetLoss)
@@ -73,7 +73,7 @@ struct PingView: View {
                             .foregroundColor(stats.packetLoss == "0%" ? .green : .orange)
                     }
                     HStack(spacing: 4) {
-                        Text("平均延迟:")
+                        Text("result.avg_latency".localized + ":")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text(stats.avgLatency)
@@ -87,7 +87,7 @@ struct PingView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.cardBackground)
         )
     }
 

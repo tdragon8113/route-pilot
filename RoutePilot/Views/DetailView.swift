@@ -40,8 +40,8 @@ struct DetailView: View {
             }
 
             Picker("", selection: $selectedTab) {
-                Text("当前路由").tag(0)
-                Text("操作日志").tag(1)
+                Text("tab.current_routes".localized).tag(0)
+                Text("tab.operation_logs".localized).tag(1)
             }
             .pickerStyle(.segmented)
 

@@ -8,7 +8,7 @@ import Foundation
 /// 守护进程管理器
 enum DaemonManager {
 
-    static let daemonLabel = "com.tangda.RoutePilotDaemon"
+    static let daemonLabel = "com.sunny.RoutePilotDaemon"
     static let daemonBinaryName = "route-pilot-daemon"
     static let daemonBinaryPath = "/usr/local/bin/route-pilot-daemon"
     static let launchAgentsPath = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
@@ -47,7 +47,7 @@ enum DaemonManager {
         let bundledDaemon = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/\(daemonBinaryName)")
 
         guard FileManager.default.fileExists(atPath: bundledDaemon.path) else {
-            return (false, "找不到守护进程可执行文件，请重新安装应用")
+            return (false, String.localizedStatic("error.daemon_not_found"))
         }
 
         // 2. 一次性执行：配置免密授权 + 复制守护进程（只需一次授权）
@@ -64,7 +64,7 @@ enum DaemonManager {
 
         let installResult = runWithAdminPrivileges(installScript)
         guard installResult.success else {
-            return (false, "安装失败: \(installResult.error ?? "未知错误")")
+            return (false, String.localizedFormat("error.install_failed", installResult.error ?? String.localizedStatic("error.unknown")))
         }
 
         // 4. 生成 LaunchAgent plist
@@ -75,7 +75,7 @@ enum DaemonManager {
             try FileManager.default.createDirectory(at: launchAgentsPath, withIntermediateDirectories: true)
             try plistContent.write(to: plistPath, atomically: true, encoding: .utf8)
         } catch {
-            return (false, "创建 plist 文件失败: \(error.localizedDescription)")
+            return (false, String.localizedFormat("error.plist_failed", error.localizedDescription))
         }
 
         // 5. 加载 LaunchAgent
@@ -87,10 +87,10 @@ enum DaemonManager {
             try loadTask.run()
             loadTask.waitUntilExit()
             if loadTask.terminationStatus != 0 {
-                return (false, "加载 LaunchAgent 失败")
+                return (false, String.localizedStatic("error.launchagent_load_failed"))
             }
         } catch {
-            return (false, "执行 launchctl 失败: \(error.localizedDescription)")
+            return (false, String.localizedFormat("error.launchctl_failed", error.localizedDescription))
         }
 
         return (true, nil)
@@ -109,7 +109,7 @@ enum DaemonManager {
         let result = runWithAdminPrivileges(uninstallScript)
 
         if !result.success {
-            return (false, "卸载失败: \(result.error ?? "未知错误")")
+            return (false, String.localizedFormat("error.uninstall_failed", result.error ?? String.localizedStatic("error.unknown")))
         }
 
         return (true, nil)
@@ -120,7 +120,7 @@ enum DaemonManager {
         let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
 
         guard FileManager.default.fileExists(atPath: plistPath.path) else {
-            return (false, "LaunchAgent plist 不存在")
+            return (false, String.localizedStatic("error.plist_not_exist"))
         }
 
         let task = Process()
@@ -207,7 +207,7 @@ enum DaemonManager {
                 return (true, nil)
             } else {
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let error = String(data: data, encoding: .utf8) ?? "未知错误"
+                let error = String(data: data, encoding: .utf8) ?? String.localizedStatic("error.unknown")
                 return (false, error)
             }
         } catch {

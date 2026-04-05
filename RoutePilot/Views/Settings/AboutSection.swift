@@ -8,9 +8,9 @@ import SwiftUI
 /// 关于信息组件
 struct AboutSection: View {
     var body: some View {
-        SettingsSection(title: "关于", icon: "info.circle.fill") {
+        SettingsSection(title: "settings.about".localized, icon: "info.circle.fill") {
             HStack {
-                Text("版本")
+                Text("settings.version".localized)
                     .font(.subheadline)
                 Spacer()
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")

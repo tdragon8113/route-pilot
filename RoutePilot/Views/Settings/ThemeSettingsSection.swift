@@ -10,9 +10,9 @@ struct ThemeSettingsSection: View {
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
 
     var body: some View {
-        SettingsSection(title: "外观", icon: "paintbrush.fill") {
+        SettingsSection(title: "settings.appearance".localized, icon: "paintbrush.fill") {
             HStack {
-                Text("主题")
+                Text("settings.theme".localized)
                     .font(.subheadline)
                 Spacer()
                 Picker("", selection: $appTheme) {
@@ -23,13 +23,10 @@ struct ThemeSettingsSection: View {
                 }
                 .pickerStyle(.menu)
                 .frame(width: 100)
-                .onChange(of: appTheme) { newTheme in
+                .onChange(of: appTheme) { _, newTheme in
                     applyTheme(newTheme)
                 }
             }
-        }
-        .onAppear {
-            applyTheme(appTheme)
         }
     }
 
@@ -53,9 +50,9 @@ enum AppTheme: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .light: return "浅色"
-        case .dark: return "深色"
-        case .system: return "跟随系统"
+        case .light: return "theme.light".localized
+        case .dark: return "theme.dark".localized
+        case .system: return "theme.system".localized
         }
     }
 }

@@ -18,7 +18,7 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.borderless)
 
-                Text("设置")
+                Text("settings.title".localized)
                     .font(.headline)
 
                 Spacer()
@@ -27,6 +27,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 BackgroundServiceSection()
                 ThemeSettingsSection()
+                LanguageSettingsSection()
                 AppSettingsSection()
                 AboutSection()
             }

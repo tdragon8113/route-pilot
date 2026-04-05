@@ -28,7 +28,7 @@ struct SettingsSection<Content: View>: View {
             .padding(10)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(nsColor: .controlBackgroundColor))
+                    .fill(Color.cardBackground)
             )
         }
     }
