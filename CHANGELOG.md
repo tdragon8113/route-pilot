@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 - 公网 IP 查询改用 HTTPS API，更安全
 - 路由追踪添加 VPN 环境警告提示
+- 端口测试支持常用端口快捷选择（SSH/HTTP/HTTPS/MySQL/Redis/Mongo）
 
 ## [v1.5.0] - 2026-04-04
 
