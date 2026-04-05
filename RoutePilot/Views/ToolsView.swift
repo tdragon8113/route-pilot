@@ -528,17 +528,24 @@ struct ToolsView: View {
         isQueryingIP = true
         ipQueryError = nil
 
-        guard let url = URL(string: "http://ip-api.com/json/") else { return }
+        guard let url = URL(string: "https://ipapi.co/json/") else { return }
 
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
-                let info = try JSONDecoder().decode(PublicIPInfo.self, from: data)
+                // ipapi.co 返回格式: {"ip": "x.x.x.x", "city": "...", "region": "...", "country_name": "...", "org": "..."}
+                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
                 await MainActor.run {
                     isQueryingIP = false
-                    if info.isSuccess {
-                        publicIPInfo = info
+                    if let ip = json?["ip"] as? String {
+                        publicIPInfo = PublicIPInfo(
+                            status: "success",
+                            country: json?["country_name"] as? String ?? "",
+                            city: json?["city"] as? String ?? "",
+                            isp: json?["org"] as? String ?? "",
+                            query: ip
+                        )
                     } else {
                         ipQueryError = "查询失败"
                     }
