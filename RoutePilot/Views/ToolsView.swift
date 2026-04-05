@@ -35,6 +35,7 @@ struct ToolsView: View {
                     PortTestView()
                 }
             }
+            .frame(height: 650)
         }
     }
 }
