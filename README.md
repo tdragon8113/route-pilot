@@ -124,7 +124,7 @@ xcodebuild -project RoutePilot.xcodeproj -scheme RoutePilot -configuration Relea
 | GUI 日志 | `~/Library/Logs/RoutePilot/operations.log` |
 | 守护进程日志 | `~/Library/Logs/RoutePilot/daemon.log` |
 | LaunchAgent | `~/Library/LaunchAgents/com.sunny.RoutePilotDaemon.plist` |
-| 守护进程 | `/usr/local/bin/route-pilot-daemon` |
+| 守护进程 | `~/Library/Application Support/RoutePilot/route-pilot-daemon` |
 
 ## 技术栈
 

@@ -10,7 +10,17 @@ enum DaemonManager {
 
     static let daemonLabel = "com.sunny.RoutePilotDaemon"
     static let daemonBinaryName = "route-pilot-daemon"
-    static let daemonBinaryPath = "/usr/local/bin/route-pilot-daemon"
+
+    /// 守护进程存放目录（用户目录，无需 sudo）
+    static var daemonDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("RoutePilot")
+    }
+
+    static var daemonBinaryPath: String {
+        daemonDirectory.appendingPathComponent(daemonBinaryName).path
+    }
+
     static let launchAgentsPath = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
         .appendingPathComponent("LaunchAgents")
 
@@ -50,21 +60,24 @@ enum DaemonManager {
             return (false, String.localizedStatic("error.daemon_not_found"))
         }
 
-        // 2. 一次性执行：配置免密授权 + 复制守护进程（只需一次授权）
+        // 2. 配置免密授权（需要 sudo）
         let username = NSUserName()
         let sudoersContent = "\(username) ALL=(ALL) NOPASSWD: /sbin/route"
-        let installScript = """
-        mkdir -p /etc/sudoers.d && \
-        echo '\(sudoersContent)' | tee /etc/sudoers.d/autoroute && \
-        chmod 440 /etc/sudoers.d/autoroute && \
-        mkdir -p /usr/local/bin && \
-        cp '\(bundledDaemon.path)' '\(daemonBinaryPath)' && \
-        chmod 755 '\(daemonBinaryPath)'
-        """
+        let sudoersScript = "mkdir -p /etc/sudoers.d && echo '\(sudoersContent)' | tee /etc/sudoers.d/autoroute && chmod 440 /etc/sudoers.d/autoroute"
 
-        let installResult = runWithAdminPrivileges(installScript)
-        guard installResult.success else {
-            return (false, String.localizedFormat("error.install_failed", installResult.error ?? String.localizedStatic("error.unknown")))
+        let sudoersResult = runWithAdminPrivileges(sudoersScript)
+        guard sudoersResult.success else {
+            return (false, String.localizedFormat("error.install_failed", sudoersResult.error ?? String.localizedStatic("error.unknown")))
+        }
+
+        // 3. 复制守护进程到用户目录（无需 sudo）
+        do {
+            try FileManager.default.createDirectory(at: daemonDirectory, withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: bundledDaemon, to: URL(fileURLWithPath: daemonBinaryPath))
+            // 设置可执行权限
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: daemonBinaryPath)
+        } catch {
+            return (false, String.localizedFormat("error.daemon_copy_failed", error.localizedDescription))
         }
 
         // 4. 生成 LaunchAgent plist
@@ -100,13 +113,20 @@ enum DaemonManager {
     static func uninstall() -> (Bool, String?) {
         let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
 
-        // 一次性执行所有操作（需要管理员权限）
-        let uninstallScript = """
-        launchctl unload '\(plistPath.path)' 2>/dev/null || true && \
-        rm -f '\(plistPath.path)' '\(daemonBinaryPath)' /etc/sudoers.d/autoroute
-        """
+        // 1. 停止守护进程
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        task.arguments = ["unload", plistPath.path]
+        try? task.run()
+        task.waitUntilExit()
 
-        let result = runWithAdminPrivileges(uninstallScript)
+        // 2. 删除用户目录文件（无需 sudo）
+        try? FileManager.default.removeItem(at: plistPath)
+        try? FileManager.default.removeItem(at: URL(fileURLWithPath: daemonBinaryPath))
+
+        // 3. 清理免密授权（需要 sudo）
+        let sudoersScript = "rm -f /etc/sudoers.d/autoroute"
+        let result = runWithAdminPrivileges(sudoersScript)
 
         if !result.success {
             return (false, String.localizedFormat("error.uninstall_failed", result.error ?? String.localizedStatic("error.unknown")))

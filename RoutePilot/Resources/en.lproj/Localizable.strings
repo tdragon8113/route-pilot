@@ -183,6 +183,7 @@
 "error.plist_not_exist" = "LaunchAgent plist does not exist";
 "error.unknown" = "Unknown error";
 "error.query_format" = "Query failed: %@";
+"error.daemon_copy_failed" = "Failed to copy daemon: %@";
 
 // Status
 "status.processing" = "Processing...";

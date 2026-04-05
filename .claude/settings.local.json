@@ -31,7 +31,10 @@
       "Bash(curl -s \"http://ip-api.com/json/\")",
       "Bash(/usr/bin/netstat -rn)",
       "Bash(pkill -f \"RoutePilot\")",
-      "Bash(log show:*)"
+      "Bash(log show:*)",
+      "Bash(traceroute -w 2 -q 1 -m 10 baidu.com)",
+      "Bash(killall RoutePilot)",
+      "Bash(~/Library/Developer/Xcode/DerivedData/RoutePilot-*/Build/Products/Debug/RoutePilot.app/Contents/MacOS/RoutePilot)"
     ]
   }
 }

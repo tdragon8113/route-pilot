@@ -183,6 +183,7 @@
 "error.plist_not_exist" = "LaunchAgent plist 不存在";
 "error.unknown" = "未知错误";
 "error.query_format" = "查询失败: %@";
+"error.daemon_copy_failed" = "复制守护进程失败: %@";
 
 // Status
 "status.processing" = "处理中...";

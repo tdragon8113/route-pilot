@@ -106,6 +106,7 @@ RoutePilot/
 - 配置文件：`~/Library/Application Support/RoutePilot/config.json`
 - GUI 日志：`~/Library/Logs/RoutePilot/operations.log`
 - 守护进程日志：`~/Library/Logs/RoutePilot/daemon.log`
+- 守护进程二进制：`~/Library/Application Support/RoutePilot/route-pilot-daemon`
 
 ## 调试命令
 
