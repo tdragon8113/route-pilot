@@ -16,6 +16,11 @@ struct MainView: View {
     @ObservedObject private var app = AppController.shared
     @State private var isInstalling = false
     @State private var installError: String?
+    @State private var showHiddenVPNs = false
+
+    private var hiddenVPNs: [VPNConfig] {
+        app.vpnConfigs.filter { $0.hidden }
+    }
 
     private func installBackgroundService() {
         isInstalling = true
@@ -102,6 +107,37 @@ struct MainView: View {
                             onTap: { selectedVPN = config.name }
                         )
                     }
+                }
+            }
+
+            // 隐藏的 VPN（可折叠）
+            if !hiddenVPNs.isEmpty {
+                DisclosureGroup(isExpanded: $showHiddenVPNs) {
+                    VStack(spacing: 6) {
+                        ForEach(hiddenVPNs) { config in
+                            HStack {
+                                Text(config.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Button("显示") {
+                                    app.showVPN(config.name)
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.mini)
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                    .padding(.leading, 8)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "eye.slash")
+                            .font(.caption2)
+                        Text("已隐藏 (\(hiddenVPNs.count))")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.secondary)
                 }
             }
 
