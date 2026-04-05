@@ -135,9 +135,7 @@ struct VPNQuickConfigView: View {
             // 添加新路由
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    TextField("目标地址 (如 10.0.0.0/8 或 github.com)", text: $newRoute)
-                        .textFieldStyle(.roundedBorder)
-                        .controlSize(.small)
+                    ClearableTextField(placeholder: "目标地址 (如 10.0.0.0/8 或 github.com)", text: $newRoute)
 
                     Button("添加") {
                         if !newRoute.isEmpty {
@@ -151,9 +149,7 @@ struct VPNQuickConfigView: View {
                     .disabled(newRoute.isEmpty)
                 }
 
-                TextField("备注 (可选)", text: $newNote)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
+                ClearableTextField(placeholder: "备注 (可选)", text: $newNote)
                     .font(.caption)
             }
 
@@ -247,9 +243,7 @@ struct RouteRowView: View {
                     Text("编辑备注")
                         .font(.headline)
 
-                    TextField("备注", text: $editingNote)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 200)
+                    ClearableTextField(placeholder: "备注", text: $editingNote, width: 200)
 
                     HStack {
                         Button("取消") {
