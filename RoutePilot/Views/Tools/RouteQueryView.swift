@@ -31,9 +31,7 @@ struct RouteQueryView: View {
                 .foregroundColor(.secondary)
 
             HStack {
-                TextField("输入 IP 或域名", text: $debugInput)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
+                ClearableTextField(placeholder: "输入 IP 或域名", text: $debugInput)
                     .onSubmit {
                         runDebugQuery()
                     }

@@ -36,9 +36,7 @@ struct TracerouteView: View {
             }
 
             HStack {
-                TextField("输入目标域名或 IP", text: $tracerouteTarget)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
+                ClearableTextField(placeholder: "输入目标域名或 IP", text: $tracerouteTarget)
                     .disabled(isTracing)
 
                 if isTracing {

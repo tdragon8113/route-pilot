@@ -23,9 +23,7 @@ struct DNSQueryView: View {
                 .foregroundColor(.secondary)
 
             HStack {
-                TextField("输入域名", text: $dnsTarget)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
+                ClearableTextField(placeholder: "输入域名", text: $dnsTarget)
                     .disabled(isQueryingDNS)
                     .onSubmit {
                         queryDNS()

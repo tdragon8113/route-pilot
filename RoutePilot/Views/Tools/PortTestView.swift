@@ -34,15 +34,9 @@ struct PortTestView: View {
                 .foregroundColor(.secondary)
 
             HStack {
-                TextField("主机", text: $portHost)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
-                    .frame(width: 120)
+                ClearableTextField(placeholder: "主机", text: $portHost, width: 120)
 
-                TextField("端口", text: $portNumber)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
-                    .frame(width: 60)
+                ClearableTextField(placeholder: "端口", text: $portNumber, width: 60)
 
                 Button(isTestingPort ? "测试中..." : "测试") {
                     testPort()

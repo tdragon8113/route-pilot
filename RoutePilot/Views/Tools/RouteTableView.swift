@@ -57,9 +57,7 @@ struct RouteTableView: View {
                 }
             }
 
-            TextField("IP 过滤", text: $routeFilterIP)
-                .textFieldStyle(.roundedBorder)
-                .controlSize(.small)
+            ClearableTextField(placeholder: "IP 过滤", text: $routeFilterIP)
 
             if isLoadingRoutes {
                 HStack {

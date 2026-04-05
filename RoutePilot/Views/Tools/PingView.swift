@@ -23,9 +23,7 @@ struct PingView: View {
                 .foregroundColor(.secondary)
 
             HStack {
-                TextField("输入域名或 IP", text: $pingTarget)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
+                ClearableTextField(placeholder: "输入域名或 IP", text: $pingTarget)
                     .disabled(isPinging)
 
                 if isPinging {
