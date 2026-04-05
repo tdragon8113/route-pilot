@@ -11,25 +11,24 @@ struct ThemeSettingsSection: View {
 
     var body: some View {
         SettingsSection(title: "外观", icon: "paintbrush.fill") {
-            VStack(alignment: .leading, spacing: 10) {
-                Picker("主题", selection: $appTheme) {
+            HStack {
+                Text("主题")
+                    .font(.subheadline)
+                Spacer()
+                Picker("", selection: $appTheme) {
                     ForEach(AppTheme.allCases, id: \.self) { theme in
                         Text(theme.displayName)
                             .tag(theme)
                     }
                 }
-                .pickerStyle(.radioGroup)
+                .pickerStyle(.menu)
+                .frame(width: 100)
                 .onChange(of: appTheme) { newTheme in
                     applyTheme(newTheme)
                 }
-
-                Text("重启应用后生效")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
             }
         }
         .onAppear {
-            // 初始化时应用当前主题
             applyTheme(appTheme)
         }
     }
