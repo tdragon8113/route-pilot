@@ -166,6 +166,9 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download DMG
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
