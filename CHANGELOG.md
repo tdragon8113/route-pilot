@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.14] - 2026-04-07
+
+### 改进
+
+- 优化 Homebrew Cask uninstall 逻辑，避免 upgrade 时删除守护进程文件
+
 ## [v1.7.13] - 2026-04-07
 
 ### 新增
