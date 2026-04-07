@@ -149,11 +149,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: RoutePilot
+          path: dist
+
+      - name: List files
+        run: ls -la dist/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: RoutePilot.dmg
+          files: dist/RoutePilot.dmg
           body: ${{ steps.changelog.outputs.body }}
           generate_release_notes: ${{ steps.changelog.outputs.use_auto == 'true' }}
         env:
