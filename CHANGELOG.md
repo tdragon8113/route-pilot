@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.4] - 2026-04-07
+
+### 修复
+
+- 修复构建失败问题 - Daemon 源码被错误包含在主应用编译目标
+- 修复守护进程路由添加失败 - sudoers 配置改为 `/sbin/route` 匹配任意参数
+- 修复后台服务设置页面按钮状态刷新问题
+
 ## [v1.7.3] - 2026-04-06
 
 ### 改进
