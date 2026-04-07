@@ -82,6 +82,11 @@ jobs:
             -derivedDataPath build \
             clean build
 
+      - name: Sign app (ad-hoc)
+        run: |
+          # Ad-hoc 签名以启用视觉效果
+          codesign --force --deep --sign - build/Build/Products/Release/RoutePilot.app
+
       - name: Package .app
         run: |
           mkdir -p release
