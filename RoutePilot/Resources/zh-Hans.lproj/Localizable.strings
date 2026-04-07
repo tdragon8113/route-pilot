@@ -32,7 +32,7 @@
 "route.add" = "添加路由";
 "route.remove" = "删除路由";
 "route.clear" = "清理路由";
-"route.view_routes" = "查看路由";
+"route.view_routes" = "详情";
 "route.no_routes" = "无路由";
 "route.duplicate" = "路由规则已存在";
 "route.all_interfaces" = "全部";

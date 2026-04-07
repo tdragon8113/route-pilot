@@ -241,5 +241,16 @@ struct MainView: View {
                 }
             }
         }
+        .onAppear {
+            // 首次进入时自动选中默认 VPN
+            if selectedVPN == nil {
+                // 优先选择已启用且非隐藏的 VPN
+                if let enabledVPN = app.vpnConfigs.first(where: { $0.enabled && !$0.hidden }) {
+                    selectedVPN = enabledVPN.name
+                } else if let firstVisible = app.vpnConfigs.first(where: { !$0.hidden }) {
+                    selectedVPN = firstVisible.name
+                }
+            }
+        }
     }
 }

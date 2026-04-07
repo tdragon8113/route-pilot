@@ -32,7 +32,7 @@
 "route.add" = "Add Route";
 "route.remove" = "Remove Route";
 "route.clear" = "Clear Routes";
-"route.view_routes" = "View Routes";
+"route.view_routes" = "Details";
 "route.no_routes" = "No Routes";
 "route.duplicate" = "Route already exists";
 "route.all_interfaces" = "All";
