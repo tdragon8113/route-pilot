@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.15] - 2026-04-07
+
+### 改进
+
+- Homebrew upgrade 时不再删除任何守护进程文件
+
 ## [v1.7.14] - 2026-04-07
 
 ### 改进
