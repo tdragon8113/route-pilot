@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.10] - 2026-04-07
+
+### 修复
+
+- 详情页路由列表和日志列表添加高度限制，超出时可滚动
+
 ## [v1.7.9] - 2026-04-07
 
 ### 新增
