@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.5] - 2026-04-07
+
+### 修复
+
+- GitHub Release 版本添加 ad-hoc 签名，启用毛玻璃视觉效果
+
 ## [v1.7.4] - 2026-04-07
 
 ### 修复
