@@ -22,6 +22,21 @@ struct MainView: View {
         app.vpnConfigs.filter { $0.hidden }
     }
 
+    /// 当前正在显示的 VPN 名称（用于日志按钮）
+    private var currentVPNName: String? {
+        if let vpnName = selectedVPN,
+           app.vpnConfigs.contains(where: { $0.name == vpnName }) {
+            return vpnName
+        } else if let activeVPN = app.activeVPNs.first(where: { vpn in
+            app.vpnConfigs.contains { $0.enabled && !$0.hidden && $0.name == vpn.name }
+        }) {
+            return activeVPN.name
+        } else if let firstConfig = app.vpnConfigs.first(where: { !$0.hidden }) {
+            return firstConfig.name
+        }
+        return nil
+    }
+
     private func installBackgroundService() {
         isInstalling = true
         installError = nil
@@ -150,7 +165,8 @@ struct MainView: View {
                     vpnName: vpnName,
                     newRoute: $newRoute,
                     showDetailView: $showDetailView,
-                    detailInitialTab: $detailInitialTab
+                    detailInitialTab: $detailInitialTab,
+                    selectedVPN: $selectedVPN
                 )
                 .id(vpnName)
             } else if let activeVPN = app.activeVPNs.first(where: { vpn in
@@ -160,7 +176,8 @@ struct MainView: View {
                     vpnName: activeVPN.name,
                     newRoute: $newRoute,
                     showDetailView: $showDetailView,
-                    detailInitialTab: $detailInitialTab
+                    detailInitialTab: $detailInitialTab,
+                    selectedVPN: $selectedVPN
                 )
                 .id(activeVPN.name)
             } else if let firstConfig = app.vpnConfigs.first(where: { !$0.hidden }) {
@@ -168,7 +185,8 @@ struct MainView: View {
                     vpnName: firstConfig.name,
                     newRoute: $newRoute,
                     showDetailView: $showDetailView,
-                    detailInitialTab: $detailInitialTab
+                    detailInitialTab: $detailInitialTab,
+                    selectedVPN: $selectedVPN
                 )
                 .id(firstConfig.name)
             }
@@ -196,6 +214,10 @@ struct MainView: View {
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Button("route.view_routes".localized) {
+                            // 设置为当前正在显示的 VPN
+                            if let vpnName = currentVPNName {
+                                selectedVPN = vpnName
+                            }
                             detailInitialTab = 1
                             showDetailView = true
                         }

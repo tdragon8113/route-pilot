@@ -11,6 +11,7 @@ struct VPNQuickConfigView: View {
     @Binding var newRoute: String
     @Binding var showDetailView: Bool
     @Binding var detailInitialTab: Int
+    @Binding var selectedVPN: String?
     @ObservedObject private var app = AppController.shared
     @State private var newNote: String = ""
 
@@ -89,6 +90,7 @@ struct VPNQuickConfigView: View {
 
                 if isActiveVPN {
                     Button("route.view_routes".localized) {
+                        selectedVPN = vpnName
                         if let iface = vpnStatus?.interface {
                             app.fetchCurrentRoutes(interface: iface)
                         }
