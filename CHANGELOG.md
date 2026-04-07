@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.11] - 2026-04-07
+
+### 修复
+
+- 点击详情按钮进入正确的 VPN 详情页（之前会错误进入其他 VPN）
+- 首次进入应用时自动选中 VPN 并显示选中阴影
+
 ## [v1.7.10] - 2026-04-07
 
 ### 修复
