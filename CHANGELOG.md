@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.8] - 2026-04-07
+
+### 改进
+
+- 使用 self-hosted runner（Xcode 26）构建，确保 UI 效果一致
+
 ## [v1.7.7] - 2026-04-07
 
 ### 修复
