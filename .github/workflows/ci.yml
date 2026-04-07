@@ -3,7 +3,7 @@ name: Xcode - Build and Analyze
 on:
   push:
     branches: [ "main" ]
-  # 不允许 PR 触发，防止恶意代码在你的机器上执行
+  # 不允许 PR 触发
   # pull_request:
   #   branches: [ "main" ]
   workflow_dispatch:
@@ -17,7 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build Daemon
+        run: |
+          chmod +x scripts/build-daemon.sh
+          ./scripts/build-daemon.sh
+
       - name: Build
         run: |
-          # 调用本地构建脚本
-          ~/actions-runner/build-scripts/route-pilot.sh
+          xcodebuild -project RoutePilot.xcodeproj \
+            -scheme RoutePilot \
+            -configuration Release \
+            -derivedDataPath build \
+            clean build

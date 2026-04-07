@@ -17,11 +17,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build
-        id: build
+      - name: Build Daemon
         run: |
-          # 调用本地构建脚本（构建逻辑在本地，无法被远程修改）
-          ~/actions-runner/build-scripts/route-pilot.sh
+          chmod +x scripts/build-daemon.sh
+          ./scripts/build-daemon.sh
+
+      - name: Build
+        run: |
+          xcodebuild -project RoutePilot.xcodeproj \
+            -scheme RoutePilot \
+            -configuration Release \
+            -derivedDataPath build \
+            clean build
+
+      - name: Sign app (ad-hoc)
+        run: |
+          codesign --force --deep --sign - build/Build/Products/Release/RoutePilot.app
+
+      - name: Create DMG
+        run: |
+          mkdir -p release
+          cp -r build/Build/Products/Release/RoutePilot.app release/
+          hdiutil create -volname "RoutePilot" \
+            -srcfolder release/RoutePilot.app \
+            -ov -format UDZO \
+            release/RoutePilot.dmg
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -41,12 +61,8 @@ jobs:
       - name: Extract changelog for this version
         id: changelog
         run: |
-          # 获取版本号（如 v1.1.0）
           VERSION=${GITHUB_REF#refs/tags/}
           echo "Extracting changelog for $VERSION"
-
-          # 提取该版本的变更日志（从版本标题到下一个版本标题之间的内容）
-          # 使用 awk 来提取特定版本的段落
           CHANGELOG=$(awk -v ver="$VERSION" '
             /^## \[/{ found=0 }
             /^## \['"$VERSION"'\]/ { found=1; next }
@@ -54,14 +70,10 @@ jobs:
             found { print }
           ' CHANGELOG.md | sed '/^$/d')
 
-          # 如果找不到该版本的 changelog，使用自动生成
           if [ -z "$CHANGELOG" ]; then
-            echo "No changelog entry found for $VERSION, will use auto-generated notes"
             echo "use_auto=true" >> $GITHUB_OUTPUT
           else
-            echo "Found changelog for $VERSION"
             echo "use_auto=false" >> $GITHUB_OUTPUT
-            # 多行内容需要特殊处理
             {
               echo 'body<<EOF'
               echo "$CHANGELOG"
@@ -74,9 +86,6 @@ jobs:
         with:
           name: RoutePilot
           path: dist
-
-      - name: List files
-        run: ls -la dist/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
