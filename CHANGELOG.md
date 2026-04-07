@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.16] - 2026-04-07
+
+### 改进
+
+- Homebrew Cask 配置优化，upgrade 时无任何清理操作
+
 ## [v1.7.15] - 2026-04-07
 
 ### 改进
