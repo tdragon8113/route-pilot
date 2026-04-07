@@ -52,6 +52,7 @@ struct OperationLogsView: View {
                         }
                     }
                 }
+                .frame(maxHeight: 280)
             }
         }
         .padding(10)

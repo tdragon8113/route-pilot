@@ -72,6 +72,7 @@ struct CurrentRoutesView: View {
                 }
             }
         }
+        .frame(maxHeight: 280)
     }
 
     @ViewBuilder
