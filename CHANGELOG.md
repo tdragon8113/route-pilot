@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.7] - 2026-04-07
+
+### 修复
+
+- 修复菜单栏窗口高度自适应问题
+
 ## [v1.7.6] - 2026-04-07
 
 ### 修复
