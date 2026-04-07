@@ -17,35 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Daemon
-        run: |
-          chmod +x scripts/build-daemon.sh
-          ./scripts/build-daemon.sh
-
       - name: Build
+        id: build
         run: |
-          xcodebuild -project RoutePilot.xcodeproj \
-            -scheme RoutePilot \
-            -configuration Release \
-            -derivedDataPath build \
-            clean build
-
-      - name: Sign app (ad-hoc)
-        run: |
-          # Ad-hoc 签名以启用视觉效果
-          codesign --force --deep --sign - build/Build/Products/Release/RoutePilot.app
-
-      - name: Package .app
-        run: |
-          mkdir -p release
-          cp -r build/Build/Products/Release/RoutePilot.app release/
-
-      - name: Create DMG
-        run: |
-          hdiutil create -volname "RoutePilot" \
-            -srcfolder release/RoutePilot.app \
-            -ov -format UDZO \
-            release/RoutePilot.dmg
+          # 调用本地构建脚本（构建逻辑在本地，无法被远程修改）
+          ~/actions-runner/build-scripts/route-pilot.sh
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
