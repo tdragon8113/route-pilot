@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.6] - 2026-04-07
+
+### 修复
+
+- GitHub CI 使用 macos-15 和 Xcode 16.2，修复 Release 构建 UI 渲染问题
+- 守护进程路由添加使用完整路径 `/usr/bin/sudo /sbin/route`
+
 ## [v1.7.5] - 2026-04-07
 
 ### 修复

@@ -17,6 +17,7 @@
 		8AFEDB3B2F813448008D02CC /* build-daemon.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8AFEDB392F813448008D02CC /* build-daemon.sh */; };
 		8AFEDBBA2F815D58008D02CC /* 2026-04-04-tools-extension.md in Resources */ = {isa = PBXBuildFile; fileRef = 8AFEDBB42F815D58008D02CC /* 2026-04-04-tools-extension.md */; };
 		8AFEDBBB2F815D58008D02CC /* 2026-04-04-tools-extension-design.md in Resources */ = {isa = PBXBuildFile; fileRef = 8AFEDBB62F815D58008D02CC /* 2026-04-04-tools-extension-design.md */; };
+		8AFEDC362F82CB0A008D02CC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AFEDC342F82CB0A008D02CC /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 		8AFEDB392F813448008D02CC /* build-daemon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-daemon.sh"; sourceTree = "<group>"; };
 		8AFEDBB42F815D58008D02CC /* 2026-04-04-tools-extension.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "2026-04-04-tools-extension.md"; sourceTree = "<group>"; };
 		8AFEDBB62F815D58008D02CC /* 2026-04-04-tools-extension-design.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "2026-04-04-tools-extension-design.md"; sourceTree = "<group>"; };
+		8AFEDC342F82CB0A008D02CC /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -55,6 +57,7 @@
 		8A10E7D32F7D20A8008E16CF = {
 			isa = PBXGroup;
 			children = (
+				8AFEDC352F82CB0A008D02CC /* Daemon */,
 				8AFEDBB92F815D58008D02CC /* docs */,
 				8AFEDB3A2F813448008D02CC /* scripts */,
 				8AFED8802F8012FA008D02CC /* assets */,
@@ -148,6 +151,14 @@
 				8AFEDBB82F815D58008D02CC /* superpowers */,
 			);
 			path = docs;
+			sourceTree = "<group>";
+		};
+		8AFEDC352F82CB0A008D02CC /* Daemon */ = {
+			isa = PBXGroup;
+			children = (
+				8AFEDC342F82CB0A008D02CC /* main.swift */,
+			);
+			path = Daemon;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

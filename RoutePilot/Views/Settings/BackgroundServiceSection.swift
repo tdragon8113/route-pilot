@@ -102,6 +102,7 @@ struct BackgroundServiceSection: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .id(daemonInstalled) // Force view rebuild
             }
 
             Button("service.uninstall".localized, role: .destructive) {
@@ -110,6 +111,7 @@ struct BackgroundServiceSection: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
         }
+        .id("\(daemonInstalled)-\(daemonRunning)") // Force entire HStack rebuild on state change
 
         if app.passwordlessConfigured {
             HStack(spacing: 4) {
@@ -150,38 +152,53 @@ struct BackgroundServiceSection: View {
 
     private func uninstallDaemon() {
         daemonError = nil
-        let result = DaemonManager.uninstall()
-        if result.0 {
-            checkDaemonStatus()
-            app.passwordlessConfigured = false
-            app.showToast("service.disabled".localized, type: .success)
-        } else {
-            daemonError = result.1 ?? "error.operation_failed".localized
-            app.showToast("toast.error".localized, type: .error)
+
+        Task {
+            let result = DaemonManager.uninstall()
+            await MainActor.run {
+                if result.0 {
+                    checkDaemonStatus()
+                    app.passwordlessConfigured = false
+                    app.showToast("service.disabled".localized, type: .success)
+                } else {
+                    daemonError = result.1 ?? "error.operation_failed".localized
+                    app.showToast("toast.error".localized, type: .error)
+                }
+            }
         }
     }
 
     private func startDaemon() {
         daemonError = nil
-        let result = DaemonManager.start()
-        if result.0 {
-            checkDaemonStatus()
-            app.showToast("service.running".localized, type: .success)
-        } else {
-            daemonError = result.1 ?? "error.operation_failed".localized
-            app.showToast("toast.error".localized, type: .error)
+
+        Task {
+            let result = DaemonManager.start()
+            await MainActor.run {
+                if result.0 {
+                    checkDaemonStatus()
+                    app.showToast("service.running".localized, type: .success)
+                } else {
+                    daemonError = result.1 ?? "error.operation_failed".localized
+                    app.showToast("toast.error".localized, type: .error)
+                }
+            }
         }
     }
 
     private func stopDaemon() {
         daemonError = nil
-        let result = DaemonManager.stop()
-        if result.0 {
-            checkDaemonStatus()
-            app.showToast("service.stopped".localized, type: .success)
-        } else {
-            daemonError = result.1 ?? "error.operation_failed".localized
-            app.showToast("toast.error".localized, type: .error)
+
+        Task {
+            let result = DaemonManager.stop()
+            await MainActor.run {
+                if result.0 {
+                    checkDaemonStatus()
+                    app.showToast("service.stopped".localized, type: .success)
+                } else {
+                    daemonError = result.1 ?? "error.operation_failed".localized
+                    app.showToast("toast.error".localized, type: .error)
+                }
+            }
         }
     }
 }

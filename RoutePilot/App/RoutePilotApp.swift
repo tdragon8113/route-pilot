@@ -17,6 +17,7 @@ struct RoutePilotApp: App {
                 }
         }
         .menuBarExtraStyle(.window)
+        .windowStyle(.hiddenTitleBar)
     }
 
     private func applySavedTheme() {

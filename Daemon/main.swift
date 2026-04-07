@@ -201,45 +201,43 @@ func isValidIPv4(_ ip: String) -> Bool {
 func addRoutes(routes: [RouteItem], interface: String) {
     log("添加路由到 \(interface)...")
 
-    var commands: [String] = []
-
     for route in routes where route.enabled {
+        let destinations: [String]
+
         if route.type == .domain {
             let ips = resolveDomain(route.destination)
             if ips.isEmpty {
                 log("域名解析失败: \(route.destination)")
                 continue
             }
-            for ip in ips {
-                commands.append("route add \(ip)/32 -interface \(interface)")
-            }
+            destinations = ips.map { "\($0)/32" }
         } else {
-            commands.append("route add \(route.destination) -interface \(interface)")
+            destinations = [route.destination]
         }
-    }
 
-    for cmd in commands {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/bash")
-        task.arguments = ["-c", "sudo \(cmd) 2>&1"]
+        for dest in destinations {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+            task.arguments = ["/sbin/route", "add", dest, "-interface", interface]
 
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            task.standardError = pipe
 
-        do {
-            try task.run()
-            task.waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
+            do {
+                try task.run()
+                task.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(data: data, encoding: .utf8) ?? ""
 
-            if task.terminationStatus == 0 {
-                log("成功: \(cmd)")
-            } else {
-                log("失败: \(cmd) - \(output)")
+                if task.terminationStatus == 0 {
+                    log("成功: route add \(dest) -interface \(interface)")
+                } else {
+                    log("失败: route add \(dest) -interface \(interface) - \(output)")
+                }
+            } catch {
+                log("执行错误: route add \(dest) -interface \(interface) - \(error)")
             }
-        } catch {
-            log("执行错误: \(cmd) - \(error)")
         }
     }
 }
