@@ -9,6 +9,11 @@ import SwiftUI
 struct RoutePilotApp: App {
     @ObservedObject private var app = AppController.shared
 
+    init() {
+        // 应用启动时自动更新守护进程（如果版本不同）
+        DaemonManager.updateIfNeeded()
+    }
+
     var body: some Scene {
         MenuBarExtra("RoutePilot", systemImage: app.vpnConnected ? "antenna.radiowaves.left.and.right.circle.fill" : "antenna.radiowaves.left.and.right.circle") {
             MenuBarView()

@@ -17,6 +17,11 @@ enum DaemonManager {
             .appendingPathComponent("RoutePilot")
     }
 
+    /// App 内打包的守护进程路径
+    static var bundledDaemonPath: URL {
+        Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/\(daemonBinaryName)")
+    }
+
     static var daemonBinaryPath: String {
         daemonDirectory.appendingPathComponent(daemonBinaryName).path
     }
@@ -48,6 +53,29 @@ enum DaemonManager {
         } catch {
             return false
         }
+    }
+
+    /// 检查守护进程是否需要更新
+    /// 比较打包的守护进程和已安装的守护进程是否相同
+    static var needsUpdate: Bool {
+        guard isInstalled else { return false }
+
+        let bundled = bundledDaemonPath
+        let installed = URL(fileURLWithPath: daemonBinaryPath)
+
+        // 比较文件大小
+        let bundledSize = (try? FileManager.default.attributesOfItem(atPath: bundled.path)[.size] as? Int64) ?? 0
+        let installedSize = (try? FileManager.default.attributesOfItem(atPath: installed.path)[.size] as? Int64) ?? 0
+
+        if bundledSize != installedSize {
+            return true
+        }
+
+        // 比较修改时间（打包的文件更新时间应该更晚）
+        let bundledModDate = (try? FileManager.default.attributesOfItem(atPath: bundled.path)[.modificationDate] as? Date) ?? Date.distantPast
+        let installedModDate = (try? FileManager.default.attributesOfItem(atPath: installed.path)[.modificationDate] as? Date) ?? Date.distantPast
+
+        return bundledModDate > installedModDate
     }
 
     /// 安装守护进程（同时配置免密授权）
@@ -171,6 +199,61 @@ enum DaemonManager {
         } catch {
             return (false, error.localizedDescription)
         }
+    }
+
+    /// 更新守护进程（停止 -> 替换 -> 重新启动）
+    /// - Returns: (成功, 错误信息)
+    static func update() -> (Bool, String?) {
+        let plistPath = launchAgentsPath.appendingPathComponent("\(daemonLabel).plist")
+        let wasRunning = isRunning
+
+        // 1. 停止守护进程
+        if wasRunning {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            task.arguments = ["unload", plistPath.path]
+            try? task.run()
+            task.waitUntilExit()
+        }
+
+        // 2. 替换守护进程文件
+        do {
+            // 先删除旧的
+            try FileManager.default.removeItem(at: URL(fileURLWithPath: daemonBinaryPath))
+            // 复制新的
+            try FileManager.default.copyItem(at: bundledDaemonPath, to: URL(fileURLWithPath: daemonBinaryPath))
+            // 设置可执行权限
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: daemonBinaryPath)
+        } catch {
+            return (false, error.localizedDescription)
+        }
+
+        // 3. 重新启动
+        if wasRunning {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            task.arguments = ["load", plistPath.path]
+
+            do {
+                try task.run()
+                task.waitUntilExit()
+                if task.terminationStatus != 0 {
+                    return (false, "Failed to restart daemon")
+                }
+            } catch {
+                return (false, error.localizedDescription)
+            }
+        }
+
+        return (true, nil)
+    }
+
+    /// 如果需要则自动更新守护进程
+    /// - Returns: 是否执行了更新
+    static func updateIfNeeded() -> Bool {
+        guard needsUpdate else { return false }
+        let result = update()
+        return result.0
     }
 
     // MARK: - 私有方法
