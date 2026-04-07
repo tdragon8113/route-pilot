@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.13] - 2026-04-07
+
+### 新增
+
+- 应用启动时自动检测并更新守护进程，解决 Homebrew upgrade 后守护进程版本不匹配问题
+
+### 改进
+
+- 优化 Homebrew Cask uninstall 逻辑，避免 upgrade 时删除守护进程和需要 sudo 密码
+
 ## [v1.7.12] - 2026-04-07
 
 ### 修复
