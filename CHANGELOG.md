@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.12] - 2026-04-07
+
+### 修复
+
+- 应用版本号与 Git tag 保持同步
+
 ## [v1.7.11] - 2026-04-07
 
 ### 修复
