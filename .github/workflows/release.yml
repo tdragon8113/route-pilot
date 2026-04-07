@@ -17,6 +17,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # 从 tag 提取版本号 (v1.7.12 -> 1.7.12)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          BUILD_NUMBER=$(echo $VERSION | awk -F. '{print $3}')
+
+          echo "Version: $VERSION"
+          echo "Build Number: $BUILD_NUMBER"
+
+          # 更新 Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" RoutePilot/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" RoutePilot/Resources/Info.plist
+
+          # 验证更新
+          echo "Updated Info.plist:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" RoutePilot/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" RoutePilot/Resources/Info.plist
+
       - name: Build Daemon
         run: |
           chmod +x scripts/build-daemon.sh
