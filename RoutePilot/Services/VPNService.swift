@@ -17,27 +17,13 @@ actor VPNService {
 
     private init() {}
 
-    /// 获取系统 VPN 列表
+    /// 获取系统 VPN 列表（含 Tunnelblick / OpenVPN）
     func getSystemVPNs() async -> [String] {
         let output = await ShellRunner.shared.runWithOutput("/usr/sbin/scutil --nc list")
-        var vpns: [String] = []
+        var vpns = parseScutilVPNNames(from: output)
 
-        let pattern = "\"([^\"]+)\""
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return vpns }
-
-        for line in output.split(separator: "\n") {
-            let lineString = String(line)
-            let range = NSRange(lineString.startIndex..., in: lineString)
-            let matches = regex.matches(in: lineString, range: range)
-
-            for match in matches {
-                if let nameRange = Range(match.range(at: 1), in: lineString) {
-                    let vpnName = String(lineString[nameRange])
-                    if !vpnName.isEmpty && !vpns.contains(vpnName) {
-                        vpns.append(vpnName)
-                    }
-                }
-            }
+        for openVPNName in OpenVPNDetector.discoverOpenVPNProfiles() where !vpns.contains(openVPNName) {
+            vpns.append(openVPNName)
         }
 
         return vpns
@@ -146,6 +132,7 @@ actor VPNService {
     /// 从 SCDynamicStore 获取 VPN 状态
     func getVPNStatusFromStore() -> [VPNStatus] {
         var result: [VPNStatus] = []
+        var seenNames = Set<String>()
 
         guard let store = store ?? SCDynamicStoreCreate(nil, "RoutePilot" as CFString, nil, nil) else {
             return result
@@ -154,7 +141,7 @@ actor VPNService {
         // 获取所有接口
         let key = "State:/Network/Interface" as CFString
         guard let interfaces = SCDynamicStoreCopyValue(store, key) as? [String: Any] else {
-            return result
+            return appendOpenVPNStatuses(to: result, seenNames: &seenNames)
         }
 
         // 遍历接口
@@ -167,6 +154,7 @@ actor VPNService {
                         // 获取 VPN 名称
                         if let vpnName = getVPNNameForInterface(interface) {
                             result.append(VPNStatus(name: vpnName, connected: true, interface: interface))
+                            seenNames.insert(vpnName)
                             NSLog("[VPNService] 从 Store 获取 VPN: \(vpnName), 接口: \(interface)")
                         }
                     }
@@ -174,7 +162,7 @@ actor VPNService {
             }
         }
 
-        return result
+        return appendOpenVPNStatuses(to: result, seenNames: &seenNames)
     }
 
     /// 判断是否为 VPN 接口
@@ -186,33 +174,67 @@ actor VPNService {
 
     /// 获取接口对应的 VPN 名称
     private func getVPNNameForInterface(_ interface: String) -> String? {
-        // 使用 scutil 获取接口对应的 VPN 名称
-        // 先尝试从 scutil --nc list 获取已连接的 VPN
+        if let systemName = systemVPNName(for: interface) {
+            return systemName
+        }
+
+        let claimedInterfaces = OpenVPNDetector.systemConnectedVPNInterfaces()
+        return OpenVPNDetector.resolveOpenVPNName(for: interface, excludingInterfaces: claimedInterfaces)
+    }
+
+    private func systemVPNName(for interface: String) -> String? {
         let output = ShellRunner.runWithOutputSync("/usr/sbin/scutil --nc list")
 
-        for line in output.split(separator: "\n") {
-            let lineStr = String(line)
-            guard lineStr.contains("(Connected)") else { continue }
+        for vpnName in parseScutilVPNNames(from: output) {
+            let escapedName = vpnName.replacingOccurrences(of: "\"", with: "\\\"")
+            let statusOutput = ShellRunner.runWithOutputSync("/usr/sbin/scutil --nc status \"\(escapedName)\"")
+            guard statusOutput.localizedCaseInsensitiveContains("Connected") else { continue }
 
-            // 提取 VPN 名称
-            let namePattern = "\"([^\"]+)\""
-            guard let nameRegex = try? NSRegularExpression(pattern: namePattern) else { continue }
-            let range = NSRange(lineStr.startIndex..., in: lineStr)
-            let matches = nameRegex.matches(in: lineStr, range: range)
-
-            guard let nameMatch = matches.first,
-                  let vpnNameRange = Range(nameMatch.range(at: 1), in: lineStr) else { continue }
-
-            let vpnName = String(lineStr[vpnNameRange])
-
-            // 检查该 VPN 的接口是否匹配
-            let statusOutput = ShellRunner.runWithOutputSync("/usr/sbin/scutil --nc status \"\(vpnName)\"")
             if statusOutput.contains("InterfaceName : \(interface)") {
                 return vpnName
             }
         }
 
         return nil
+    }
+
+    private func parseScutilVPNNames(from output: String) -> [String] {
+        var vpns: [String] = []
+        let pattern = "\"([^\"]+)\""
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return vpns }
+
+        for line in output.split(separator: "\n") {
+            let lineString = String(line)
+            let range = NSRange(lineString.startIndex..., in: lineString)
+            let matches = regex.matches(in: lineString, range: range)
+
+            for match in matches {
+                if let nameRange = Range(match.range(at: 1), in: lineString) {
+                    let vpnName = String(lineString[nameRange])
+                    if !vpnName.isEmpty && !vpns.contains(vpnName) {
+                        vpns.append(vpnName)
+                    }
+                }
+            }
+        }
+
+        return vpns
+    }
+
+    private func appendOpenVPNStatuses(to result: [VPNStatus], seenNames: inout Set<String>) -> [VPNStatus] {
+        var merged = result
+        let claimedInterfaces = OpenVPNDetector.systemConnectedVPNInterfaces()
+
+        for connection in OpenVPNDetector.discoverActiveOpenVPNConnections(excludingInterfaces: claimedInterfaces) {
+            guard let interface = connection.interface,
+                  !seenNames.contains(connection.name) else { continue }
+
+            merged.append(VPNStatus(name: connection.name, connected: true, interface: interface))
+            seenNames.insert(connection.name)
+            NSLog("[VPNService] 从 OpenVPN 获取 VPN: \(connection.name), 接口: \(interface)")
+        }
+
+        return merged
     }
 
     /// 停止监听

@@ -6,6 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DAEMON_SOURCE="$PROJECT_DIR/Daemon/main.swift"
+OPENVPN_DETECTOR_SOURCE="$PROJECT_DIR/RoutePilot/Services/OpenVPNDetector.swift"
 BUILD_DIR="$PROJECT_DIR/build"
 DAEMON_BINARY="$BUILD_DIR/route-pilot-daemon"
 
@@ -17,6 +18,7 @@ mkdir -p "$BUILD_DIR"
 # 编译 daemon
 swiftc -O \
     -o "$DAEMON_BINARY" \
+    "$OPENVPN_DETECTOR_SOURCE" \
     "$DAEMON_SOURCE" \
     -framework Foundation \
     -framework SystemConfiguration

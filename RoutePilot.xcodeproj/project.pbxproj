@@ -17,7 +17,6 @@
 		8AFEDB3B2F813448008D02CC /* build-daemon.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8AFEDB392F813448008D02CC /* build-daemon.sh */; };
 		8AFEDBBA2F815D58008D02CC /* 2026-04-04-tools-extension.md in Resources */ = {isa = PBXBuildFile; fileRef = 8AFEDBB42F815D58008D02CC /* 2026-04-04-tools-extension.md */; };
 		8AFEDBBB2F815D58008D02CC /* 2026-04-04-tools-extension-design.md in Resources */ = {isa = PBXBuildFile; fileRef = 8AFEDBB62F815D58008D02CC /* 2026-04-04-tools-extension-design.md */; };
-		8AFEDC362F82CB0A008D02CC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AFEDC342F82CB0A008D02CC /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */

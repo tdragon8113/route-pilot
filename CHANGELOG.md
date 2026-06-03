@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.7.17] - 2026-06-03
+
+### 新增
+
+- 支持 Tunnelblick / OpenVPN 检测与展示（不依赖 `scutil --nc list`）
+- 扫描 `.tblk` 配置，连接后显示 `OpenVPN (profile)` 并支持守护进程自动加路由
+
+### 修复
+
+- 修复 OpenVPN `--config` 路径含空格时被误识别为 `OpenVPN (Application)` 的问题
+
 ## [v1.7.16] - 2026-04-07
 
 ### 改进
